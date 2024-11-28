@@ -1,7 +1,7 @@
 ﻿<Window x:Class="Techolics_.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Techolics Application" Height="600" Width="1000"
+        Title="Techolics_" Height="600" Width="1000"
         WindowStartupLocation="CenterScreen">
 	<Grid>
 		<!-- Define two rows: one for the navigation bar, one for the content -->
