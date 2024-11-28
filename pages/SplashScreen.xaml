@@ -5,10 +5,9 @@
         WindowStartupLocation="CenterScreen" WindowStyle="None" ShowInTaskbar="False" Background="#06142c">
 
     <Grid>
-        <Border BorderBrush="#3090ff" BorderThickness="5" HorizontalAlignment="Center" Height="108" VerticalAlignment="Center" Width="254"/>
-        <Border BorderBrush="#3090ff" BorderThickness="4" HorizontalAlignment="Center" Height="70" VerticalAlignment="Center" Width="200"/>
+        <Image Source="/assets/logo.png" Width="200" Height="200" Margin="200,70,200,130"  />
         <TextBlock x:Name="DynamicText" FontSize="36" Foreground="#3090ff" 
-                   HorizontalAlignment="Center" VerticalAlignment="Center" 
+                   HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,273,0,0" 
                     />
     </Grid>
 </Window>
