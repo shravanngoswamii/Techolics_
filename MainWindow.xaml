@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="MainWindow" Height="450" Width="800">
 	<Grid>
-		<TextBlock Text="Welcome to Techolics!!"
+		<TextBlock Text="Welcome to Techolics!"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
                    FontSize="24"
