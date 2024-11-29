@@ -8,7 +8,7 @@ namespace Techolics_.pages
     {
         private string _textToType = "Techolics_";
         private int _currentIndex = 0;
-        private DispatcherTimer _typingTimer;
+        private DispatcherTimer _typingTimer = new DispatcherTimer(); // Initialize here
 
         public SplashScreen()
         {
@@ -18,15 +18,12 @@ namespace Techolics_.pages
 
         private void StartTypingEffect()
         {
-            _typingTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromMilliseconds(50) // Typing speed
-            };
+            _typingTimer.Interval = TimeSpan.FromMilliseconds(50); // Typing speed
             _typingTimer.Tick += TypingEffectTick;
             _typingTimer.Start();
         }
 
-        private void TypingEffectTick(object sender, EventArgs e)
+        private void TypingEffectTick(object? sender, EventArgs e)
         {
             if (_currentIndex < _textToType.Length)
             {

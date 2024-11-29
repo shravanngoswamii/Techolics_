@@ -10,12 +10,30 @@
 
   <ItemGroup>
     <None Remove="assets\logo.png" />
-    <None Remove="assets\logo.svg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Remove="data\CIS_Benchmark_Documentation.xaml" />
+    <Page Remove="data\CIS_Benchmark_Values.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="data\CIS_Benchmark_Documentation.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="data\CIS_Benchmark_Values.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <ItemGroup>
     <Resource Include="assets\logo.png" />
-    <Resource Include="assets\logo.svg" />
   </ItemGroup>
 
 </Project>

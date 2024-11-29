@@ -1,0 +1,250 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<CIS_Benchmark>
+    <Section id="1" title="Account Policies">
+        <Section id="1.1" title="Password Policy">
+            <Policy
+                id="1.1.1"
+                mode="Automated"
+                profile="L1"
+                title="Enforce password history"
+                value_type="Integer">
+                <DefaultValue domain="24" standalone="0" />
+                <ValueConstraints>
+                    <RequiredValue operator="greater_or_equal" value="24" />
+                </ValueConstraints>
+                <Implementation>
+                    <Registry>
+                        <Key>HKEY_LOCAL_MACHINE\Software\Policies\Microsoft\Windows\CurrentVersion\Policies\System</Key>
+                        <ValueName>EnforcePasswordHistory</ValueName>
+                        <ValueType>DWORD</ValueType>
+                    </Registry>
+                    <Secedit>
+                        <TemplateSetting>PasswordHistorySize = %Value%</TemplateSetting>
+                    </Secedit>
+                    <GroupPolicy>
+                        <PolicyPath>Computer Configuration\Policies\Windows Settings\Security Settings\Account Policies\Password Policy</PolicyPath>
+                        <PolicyName>Enforce password history</PolicyName>
+                    </GroupPolicy>
+                </Implementation>
+            </Policy>
+            <Policy
+                id="1.1.2"
+                mode="Automated"
+                profile="L1"
+                title="Maximum password age"
+                value_type="Integer">
+                <DefaultValue value="42" />
+                <ValueConstraints>
+                    <RequiredValue operator="less_or_equal" value="365" />
+                    <RequiredValue operator="not_equal" value="0" />
+                </ValueConstraints>
+            </Policy>
+            <Policy
+                id="1.1.3"
+                mode="Automated"
+                profile="L1"
+                title="Minimum password age"
+                value_type="Integer">
+                <DefaultValue domain="1" standalone="0" />
+                <ValueConstraints>
+                    <RequiredValue operator="greater_or_equal" value="1" />
+                </ValueConstraints>
+            </Policy>
+            <Policy
+                id="1.1.4"
+                mode="Automated"
+                profile="L1"
+                title="Minimum password length"
+                value_type="Integer">
+                <DefaultValue domain="7" standalone="0" />
+                <ValueConstraints>
+                    <RequiredValue operator="greater_or_equal" value="14" />
+                </ValueConstraints>
+            </Policy>
+            <Policy
+                id="1.1.5"
+                mode="Automated"
+                profile="L1"
+                title="Password must meet complexity requirements"
+                value_type="Boolean">
+                <DefaultValue domain="true" standalone="false" />
+                <ValueConstraints>
+                    <RequiredValue operator="equal" value="true" />
+                </ValueConstraints>
+            </Policy>
+            <Policy
+                id="1.1.6"
+                mode="Automated"
+                profile="L1"
+                title="Relax minimum password length limits"
+                value_type="Boolean">
+                <DefaultValue value="false" />
+                <ValueConstraints>
+                    <RequiredValue operator="equal" value="true" />
+                </ValueConstraints>
+            </Policy>
+            <Policy
+                id="1.1.7"
+                mode="Automated"
+                profile="L1"
+                title="Store passwords using reversible encryption"
+                value_type="Boolean">
+                <DefaultValue value="false" />
+                <ValueConstraints>
+                    <RequiredValue operator="equal" value="false" />
+                </ValueConstraints>
+            </Policy>
+        </Section>
+        <Section id="1.2" title="Account Lockout Policy">
+            <Policy
+                id="1.2.1"
+                mode="Automated"
+                profile="L1"
+                title="Account lockout duration"
+                value_type="Integer">
+                <DefaultValue value="None" />
+                <ValueConstraints>
+                    <RequiredValue operator="greater_or_equal" value="15" />
+                </ValueConstraints>
+            </Policy>
+            <Policy
+                id="1.2.2"
+                mode="Automated"
+                profile="L1"
+                title="Account lockout threshold"
+                value_type="Integer">
+                <DefaultValue value="0" />
+                <ValueConstraints>
+                    <RequiredValue operator="less_or_equal" value="5" />
+                    <RequiredValue operator="not_equal" value="0" />
+                </ValueConstraints>
+            </Policy>
+            <Policy
+                id="1.2.3"
+                mode="Manual"
+                profile="L1"
+                title="Allow Administrator account lockout"
+                value_type="Boolean">
+                <DefaultValue value="false" />
+                <ValueConstraints>
+                    <RequiredValue operator="equal" value="true" />
+                </ValueConstraints>
+            </Policy>
+            <Policy
+                id="1.2.4"
+                mode="Automated"
+                profile="L1"
+                title="Reset account lockout counter after"
+                value_type="Integer">
+                <DefaultValue value="None" />
+                <ValueConstraints>
+                    <RequiredValue operator="greater_or_equal" value="15" />
+                </ValueConstraints>
+            </Policy>
+        </Section>
+    </Section>
+    <Section id="2" title="Local Policies">
+        <Section id="2.1" title="Audit Policy" />
+        <Section id="2.2" title="User Rights Assignment">
+            <Policy
+                id="2.2.1"
+                mode="Automated"
+                profile="L1"
+                title="Access Credential Manager as a trusted caller"
+                value_type="String">
+                <DefaultValue value="No One" />
+                <ValueConstraints>
+                    <RequiredValue operator="equal" value="No One" />
+                </ValueConstraints>
+            </Policy>
+            <Policy
+                id="2.2.2"
+                mode="Automated"
+                profile="L1"
+                title="Access this computer from the network"
+                value_type="String">
+                <DefaultValue value="Administrators, Backup Operators, Everyone, Users." />
+                <ValueConstraints>
+                    <RequiredValue operator="equal" value="Administrators, Remote Desktop Users" />
+                </ValueConstraints>
+            </Policy>
+            <Policy
+                id="2.2.3"
+                mode="Automated"
+                profile="L1"
+                title="Act as part of the operating system"
+                value_type="String">
+                <DefaultValue value="No One" />
+                <ValueConstraints>
+                    <RequiredValue operator="equal" value="No One" />
+                </ValueConstraints>
+            </Policy>
+            <Policy
+                id="2.2.4"
+                mode="Automated"
+                profile="L1"
+                title="Adjust memory quotas for a process"
+                value_type="String">
+                <DefaultValue value="Administrators, LOCAL SERVICE, NETWORK SERVICE" />
+                <ValueConstraints>
+                    <RequiredValue operator="equal" value="Administrators, LOCAL SERVICE, NETWORK SERVICE" />
+                </ValueConstraints>
+            </Policy>
+            <Policy
+                id="2.2.5"
+                mode="Automated"
+                profile="L1"
+                title="Allow log on locally"
+                value_type="String">
+                <DefaultValue value="Administrators, Backup Operators, Guest, Users" />
+                <ValueConstraints>
+                    <RequiredValue operator="equal" value="Administrators, Users" />
+                </ValueConstraints>
+            </Policy>
+            <Policy
+                id="2.2.6"
+                mode="Automated"
+                profile="L1"
+                title="Allow log on through Remote Desktop Services"
+                value_type="String">
+                <DefaultValue value="Administrators, Remote Desktop Users" />
+                <ValueConstraints>
+                    <RequiredValue operator="equal" value="Administrators, Remote Desktop Users" />
+                </ValueConstraints>
+            </Policy>
+            <Policy
+                id="2.2.7"
+                mode="Automated"
+                profile="L1"
+                title="Back up files and directories"
+                value_type="String">
+                <DefaultValue value="Administrators, Backup Operators" />
+                <ValueConstraints>
+                    <RequiredValue operator="equal" value="Administrators" />
+                </ValueConstraints>
+            </Policy>
+            <Policy
+                id="2.2.8"
+                mode="Automated"
+                profile="L1"
+                title="Change the system time"
+                value_type="String">
+                <DefaultValue value="Administrators, LOCAL SERVICE" />
+                <ValueConstraints>
+                    <RequiredValue operator="equal" value="Administrators, LOCAL SERVICE" />
+                </ValueConstraints>
+            </Policy>
+            <Policy
+                id="2.2.9"
+                mode="Automated"
+                profile="L1"
+                title="Change the time zone"
+                value_type="String">
+                <DefaultValue value="Administrators, LOCAL SERVICE, Users" />
+                <ValueConstraints>
+                    <RequiredValue operator="equal" value="Administrators, LOCAL SERVICE, Users" />
+                </ValueConstraints>
+            </Policy>
+        </Section>
+    </Section>
+</CIS_Benchmark>
