@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.Management;
 using System.Security.Principal;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
-using Microsoft.Win32;
 
 namespace Techolics_
 {
@@ -42,10 +42,6 @@ namespace Techolics_
             timer.Interval = TimeSpan.FromSeconds(1);
             timer.Tick += Timer_Tick;
             timer.Start();
-
-            // Handle "Select All" checkbox events
-            SelectAllCheckBox.Checked += SelectAllCheckBox_Checked;
-            SelectAllCheckBox.Unchecked += SelectAllCheckBox_Unchecked;
         }
 
         private void Timer_Tick(object? sender, EventArgs e)
@@ -119,39 +115,10 @@ namespace Techolics_
             adminPrompt.ShowDialog();
         }
 
-        private void SelectAllCheckBox_Checked(object sender, RoutedEventArgs e)
-        {
-            L1CheckBox.IsChecked = true;
-            L1BLCheckBox.IsChecked = true;
-            L2CheckBox.IsChecked = true;
-            L2BLCheckBox.IsChecked = true;
-            BLCheckBox.IsChecked = true;
-        }
-
-        private void SelectAllCheckBox_Unchecked(object sender, RoutedEventArgs e)
-        {
-            L1CheckBox.IsChecked = false;
-            L1BLCheckBox.IsChecked = false;
-            L2CheckBox.IsChecked = false;
-            L2BLCheckBox.IsChecked = false;
-            BLCheckBox.IsChecked = false;
-        }
-
-        private List<string> GetSelectedProfiles()
-        {
-            var profiles = new List<string>();
-            if (L1CheckBox.IsChecked == true) profiles.Add("L1");
-            if (L1BLCheckBox.IsChecked == true) profiles.Add("L1+BL");
-            if (L2CheckBox.IsChecked == true) profiles.Add("L2");
-            if (L2BLCheckBox.IsChecked == true) profiles.Add("L2+BL");
-            if (BLCheckBox.IsChecked == true) profiles.Add("BL");
-            return profiles;
-        }
-
         private void AuditButton_Click(object sender, RoutedEventArgs e)
         {
-            var selectedProfiles = GetSelectedProfiles();
-            if (selectedProfiles.Count == 0)
+
+            if (SelectedItemsListBox.Items.Count == 0)
             {
                 MessageBox.Show("Please select at least one profile.", "No Profile Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -159,21 +126,19 @@ namespace Techolics_
 
             if (!IsUserAdministrator())
             {
-                // Show the admin prompt
                 AdminPromptWindow adminPrompt = new AdminPromptWindow();
                 adminPrompt.ShowDialog();
                 return;
             }
 
-            PolicyExplorerWindow policyExplorerWindow = new PolicyExplorerWindow(selectedProfiles, "Audit");
+            PolicyExplorerWindow policyExplorerWindow = new PolicyExplorerWindow(GetSelectedProfiles(), "Audit");
             policyExplorerWindow.Show();
             this.Close();
         }
 
         private void ConfigButton_Click(object sender, RoutedEventArgs e)
         {
-            var selectedProfiles = GetSelectedProfiles();
-            if (selectedProfiles.Count == 0)
+            if (SelectedItemsListBox.Items.Count == 0)
             {
                 MessageBox.Show("Please select at least one profile.", "No Profile Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -181,15 +146,83 @@ namespace Techolics_
 
             if (!IsUserAdministrator())
             {
-                // Show the admin prompt
                 AdminPromptWindow adminPrompt = new AdminPromptWindow();
                 adminPrompt.ShowDialog();
                 return;
             }
 
-            PolicyExplorerWindow policyExplorerWindow = new PolicyExplorerWindow(selectedProfiles, "Config");
+            PolicyExplorerWindow policyExplorerWindow = new PolicyExplorerWindow(GetSelectedProfiles(), "Config");
             policyExplorerWindow.Show();
             this.Close();
+        }
+
+        private List<string> GetSelectedProfiles()
+        {
+            var profiles = new List<string>();
+            foreach (ListBoxItem item in SelectedItemsListBox.Items)
+            {
+                profiles.Add(item.Content.ToString());
+            }
+            return profiles;
+        }
+
+        // Event Handlers for Buttons
+        private void AddButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (AvailableItemsListBox.SelectedItem is ListBoxItem selectedItem)
+            {
+                AvailableItemsListBox.Items.Remove(selectedItem);
+                SelectedItemsListBox.Items.Add(selectedItem);
+            }
+            else
+            {
+                MessageBox.Show("Please select an item to add.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        private void AddAllButton_Click(object sender, RoutedEventArgs e)
+        {
+            var itemsToMove = new List<ListBoxItem>();
+
+            foreach (var item in AvailableItemsListBox.Items)
+            {
+                itemsToMove.Add(item as ListBoxItem);
+            }
+
+            foreach (var item in itemsToMove)
+            {
+                AvailableItemsListBox.Items.Remove(item);
+                SelectedItemsListBox.Items.Add(item);
+            }
+        }
+
+        private void RemoveButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (SelectedItemsListBox.SelectedItem is ListBoxItem selectedItem)
+            {
+                SelectedItemsListBox.Items.Remove(selectedItem);
+                AvailableItemsListBox.Items.Add(selectedItem);
+            }
+            else
+            {
+                MessageBox.Show("Please select an item to remove.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        private void RemoveAllButton_Click(object sender, RoutedEventArgs e)
+        {
+            var itemsToMove = new List<ListBoxItem>();
+
+            foreach (var item in SelectedItemsListBox.Items)
+            {
+                itemsToMove.Add(item as ListBoxItem);
+            }
+
+            foreach (var item in itemsToMove)
+            {
+                SelectedItemsListBox.Items.Remove(item);
+                AvailableItemsListBox.Items.Add(item);
+            }
         }
     }
 }
