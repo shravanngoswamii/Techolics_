@@ -410,5 +410,10 @@ namespace Techolics_
 
             return parent as TreeViewItem;
         }
+        public void StartConfig(bool configureAll)
+        {
+            auditor.ConfigurePolicies(configureAll);
+        }
+
     }
 }
