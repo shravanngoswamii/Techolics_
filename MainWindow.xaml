@@ -1,176 +1,80 @@
 ﻿<Window x:Class="Techolics_.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Techolics_" Height="600" Width="1000" Icon="/assets/logo.png"
+        Title="Dashboard"
+        Width="800"
+        Height="600"
+        Icon="/assets/logo.png"
         WindowStartupLocation="CenterScreen">
-    <Grid>
-        <!-- Define two rows: one for the navigation bar, one for the content -->
+    <Grid Margin="10">
+        <!-- Define rows for layout -->
         <Grid.RowDefinitions>
-            <!-- Navigation Bar -->
-            <RowDefinition Height="Auto"/>
-            <!-- Content Area -->
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto" />
+            <!-- Header -->
+            <RowDefinition Height="*" />
+            <!-- Main Content -->
+            <RowDefinition Height="Auto" />
+            <!-- Footer (for time display) -->
         </Grid.RowDefinitions>
 
-        <!-- Navigation Bar -->
-        <Menu Grid.Row="0">
-            <MenuItem Header="File">
-                <MenuItem Header="New"/>
-                <MenuItem Header="Open"/>
-                <MenuItem Header="Save"/>
-                <Separator/>
-                <MenuItem Header="Exit"/>
-            </MenuItem>
-            <MenuItem Header="Edit">
-                <MenuItem Header="Undo"/>
-                <MenuItem Header="Redo"/>
-                <Separator/>
-                <MenuItem Header="Copy"/>
-                <MenuItem Header="Paste"/>
-            </MenuItem>
-            <MenuItem Header="View">
-                <MenuItem Header="Zoom In"/>
-                <MenuItem Header="Zoom Out"/>
-            </MenuItem>
-            <MenuItem Header="Tools">
-                <MenuItem Header="Options"/>
-            </MenuItem>
-            <MenuItem Header="Export"/>
-            <MenuItem Header="Import"/>
-        </Menu>
+        <!-- Header: System Details -->
+        <StackPanel Grid.Row="0" Orientation="Vertical" Margin="0,0,0,10">
+            <TextBlock Text="System Details" FontSize="20" FontWeight="Bold" Margin="0,0,0,10"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <TextBlock Text="Username: " FontWeight="Bold"/>
+                <TextBlock x:Name="UsernameTextBlock"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <TextBlock Text="Windows Version: " FontWeight="Bold"/>
+                <TextBlock x:Name="WindowsVersionTextBlock"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <TextBlock Text="Edition: " FontWeight="Bold"/>
+                <TextBlock x:Name="EditionTextBlock"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <TextBlock Text="Domain: " FontWeight="Bold"/>
+                <TextBlock x:Name="DomainTextBlock"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                <TextBlock Text="Admin Privileges: " FontWeight="Bold"/>
+                <Ellipse x:Name="AdminStatusEllipse" Width="15" Height="15" VerticalAlignment="Center"/>
+            </StackPanel>
+        </StackPanel>
 
-        <!-- Content Area with Resizable Columns -->
-        <Grid Grid.Row="1" Margin="3">
-            <!-- Define columns including GridSplitters -->
+        <!-- Main Content: Profile Selection and Buttons -->
+        <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <!-- Column 0: Policy Explorer -->
-                <ColumnDefinition Width="1*"/>
-                <!-- Column 1: GridSplitter -->
-                <ColumnDefinition Width="5"/>
-                <!-- Column 2: Display Content -->
-                <ColumnDefinition Width="3*"/>
-                <!-- Column 3: GridSplitter -->
-                <ColumnDefinition Width="5"/>
-                <!-- Column 4: Details -->
-                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="1*" />
             </Grid.ColumnDefinitions>
 
-            <!-- First Column: Policy Explorer -->
-            <Grid Grid.Column="0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <!-- Navigation Bar -->
-                    <RowDefinition Height="*"/>
-                    <!-- Content Area -->
-                </Grid.RowDefinitions>
+            <!-- Profile Selection -->
+            <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                <TextBlock Text="Select Profiles" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                <CheckBox x:Name="L1CheckBox" Content="L1" Margin="0,0,0,5"/>
+                <CheckBox x:Name="L1BLCheckBox" Content="L1+BL" Margin="0,0,0,5"/>
+                <CheckBox x:Name="L2CheckBox" Content="L2" Margin="0,0,0,5"/>
+                <CheckBox x:Name="L2BLCheckBox" Content="L2+BL" Margin="0,0,0,5"/>
+                <CheckBox x:Name="BLCheckBox" Content="BL" Margin="0,0,0,5"/>
+                <CheckBox x:Name="SelectAllCheckBox" Content="Select All" Margin="0,10,0,0"/>
+            </StackPanel>
 
-                <Grid Grid.Row="0" Margin="10,0,0,0">
-                    <!-- Heading -->
-                    <TextBlock Text="Policy Explorer" FontWeight="Bold" Background="#f5f5f5" FontSize="16" Margin="0,0,0,0" />
-                </Grid>
+            <!-- Vertical Separator -->
+            <Separator Grid.Column="1" Width="1" Background="Gray"/>
 
-                <Grid Grid.Row="1">
-                    <TreeView x:Name="policyTreeView" Background="#f5f5f5" BorderBrush="#dcdcdc" BorderThickness="1"
-                              SelectedItemChanged="PolicyTreeView_SelectedItemChanged">
-                        <!-- TreeViewItems will be added dynamically in code -->
-                    </TreeView>
-                </Grid>
-            </Grid>
-
-            <!-- GridSplitter between Column 0 and Column 2 -->
-            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Gray" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" ShowsPreview="True"/>
-
-            <!-- Second Column: Display Content -->
-            <Grid Grid.Column="2">
-                <Grid.RowDefinitions>
-                    <!-- Location-->
-                    <RowDefinition Height="22"/>
-                    <!-- Data Grid -->
-                    <RowDefinition Height="4*"/>
-                    <!-- Plain Text Box -->
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-
-                <Grid Grid.Row="0">
-                    <TextBlock x:Name="navigationTextBlock" Text="Path" FontWeight="Bold" FontSize="16" Margin="5,0,0,0" />
-                </Grid>
-
-                <DataGrid x:Name="myDataGrid" Grid.Row="1" Background="#ffffff" BorderBrush="#dcdcdc" BorderThickness="1"
-                          AutoGenerateColumns="False" HeadersVisibility="Column" CanUserAddRows="False" 
-                          SelectionChanged="MyDataGrid_SelectionChanged" 
-                           IsReadOnly="True"
-                          SelectionMode="Extended">
-
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="ID" Binding="{Binding ID}" Width="Auto" />
-                        <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" />
-                        <DataGridTextColumn Header="Current" Binding="{Binding Current}" Width="Auto" />
-                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="Auto" />
-                    </DataGrid.Columns>
-                </DataGrid>
-
-                <Grid Grid.Row="2" Margin="5,5,5,5">
-                    <!-- Define two columns -->
-                    <Grid.ColumnDefinitions>
-                        <!-- Logs-->
-                        <ColumnDefinition Width="3*"/>
-                        <!-- Display Content -->
-                        <ColumnDefinition Width="1*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <Grid Grid.Column="0">
-                        <Grid.RowDefinitions>
-                            <!-- Heading -->
-                            <RowDefinition Height="Auto"/>
-                            <!-- Content Area -->
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-
-                        <Grid Grid.Row="0" Margin="10,0,0,0">
-                            <!-- Heading -->
-                            <TextBlock Text="Logs" FontWeight="Bold" Background="#f5f5f5" FontSize="16" Margin="0,0,0,0" />
-                        </Grid>
-
-                        <Grid Grid.Row="1" Margin="5,0,0,0">
-                            <TextBlock x:Name="logsTextBlock" TextWrapping="Wrap" FontSize="14" FontFamily="Consolas">
-                                This is the logs section where logs can be displayed.
-                            </TextBlock>
-                        </Grid>
-                    </Grid>
-
-                    <Grid Grid.Column="1">
-                        <!-- Define three rows of equal height -->
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-
-                        <!-- Buttons -->
-                        <Button Grid.Row="0" Content="Config" Margin="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
-                        <Button Grid.Row="1" Content="Config All" Margin="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
-                        <Button Grid.Row="2" Content="Edit" Margin="3" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
-                    </Grid>
-                </Grid>
-            </Grid>
-
-            <!-- GridSplitter between Column 2 and Column 4 -->
-            <GridSplitter Grid.Column="3" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="Gray" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" ShowsPreview="True"/>
-
-            <!-- Third Column: Detail Section -->
-            <Border Grid.Column="4" BorderBrush="#dcdcdc" BorderThickness="1" CornerRadius="5" Padding="10" Background="#f9f9f9">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <!-- Heading -->
-                        <TextBlock Text="Details" FontWeight="Bold" FontSize="16" Margin="0,0,0,10" />
-
-                        <!-- Content -->
-                        <TextBlock x:Name="detailsTextBlock" TextWrapping="Wrap" FontSize="14" FontFamily="Consolas">
-                            Select rows to view details.
-                        </TextBlock>
-                    </StackPanel>
-                </ScrollViewer>
-            </Border>
+            <!-- Buttons -->
+            <StackPanel Grid.Column="2" Margin="10,0,0,0" VerticalAlignment="Top">
+                <Button Content="Audit" Width="100" Margin="0,0,0,10" Click="AuditButton_Click"/>
+                <Button Content="Config" Width="100" Click="ConfigButton_Click"/>
+            </StackPanel>
         </Grid>
+
+        <!-- Footer: Current Time Display -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <TextBlock Text="Current Time: " FontWeight="Bold"/>
+            <TextBlock x:Name="CurrentTimeTextBlock" Margin="5,0,0,0"/>
+        </StackPanel>
     </Grid>
 </Window>

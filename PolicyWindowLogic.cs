@@ -1,0 +1,414 @@
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+
+namespace Techolics_
+{
+    public class PolicyWindowLogic
+    {
+        private CISBenchmark benchmarkValues;
+        private CISBenchmarkDocumentation benchmarkDocumentation;
+        private PolicyExplorerWindow policyExplorer;
+        private PolicyAuditor auditor;
+        private DataLoader dataLoader;
+        private List<string> selectedProfiles;
+        private string operation;
+
+        public PolicyWindowLogic(
+            PolicyExplorerWindow policyExplorer,
+            List<string> selectedProfiles,
+            string operation
+        )
+        {
+            this.policyExplorer = policyExplorer;
+            this.selectedProfiles = selectedProfiles;
+            this.operation = operation;
+
+            // Load data from XML files
+            dataLoader = new DataLoader();
+            benchmarkValues = dataLoader.LoadBenchmarkValues("data/CIS_Benchmark_Values.xaml");
+            benchmarkDocumentation = dataLoader.LoadBenchmarkDocumentation(
+                "data/CIS_Benchmark_Documentation.xaml"
+            );
+
+            // Initialize the auditor
+            auditor = new PolicyAuditor(policyExplorer, benchmarkValues, benchmarkDocumentation);
+
+            // Populate the TreeView
+            PopulatePolicyTreeView();
+        }
+
+        public void StartAudit()
+        {
+            auditor.AuditPolicies();
+        }
+
+        public void PopulatePolicyTreeView()
+        {
+            foreach (var section in benchmarkValues.Sections)
+            {
+                TreeViewItem sectionItem = new TreeViewItem
+                {
+                    Header = section.Title,
+                    Tag = section.Id,
+                };
+
+                AddSectionsAndPolicies(sectionItem, section);
+
+                policyExplorer.policyTreeView.Items.Add(sectionItem);
+            }
+        }
+
+        private void AddSectionsAndPolicies(TreeViewItem parentItem, Section section)
+        {
+            // Add sub-sections
+            if (section.SubSections != null)
+            {
+                foreach (var subSection in section.SubSections)
+                {
+                    TreeViewItem subSectionItem = new TreeViewItem
+                    {
+                        Header = subSection.Title,
+                        Tag = subSection.Id,
+                    };
+
+                    AddSectionsAndPolicies(subSectionItem, subSection);
+
+                    parentItem.Items.Add(subSectionItem);
+                }
+            }
+
+            // Add policies
+            if (section.Policies != null)
+            {
+                foreach (var policy in section.Policies)
+                {
+                    TreeViewItem policyItem = new TreeViewItem
+                    {
+                        Header = policy.Title,
+                        Tag = policy.Id,
+                    };
+
+                    parentItem.Items.Add(policyItem);
+                }
+            }
+        }
+
+        public void PolicyTreeView_SelectedItemChanged(
+            object sender,
+            RoutedPropertyChangedEventArgs<object> e
+        )
+        {
+            if (e.NewValue is TreeViewItem selectedItem)
+            {
+                // Update the "Logs" section with the current navigation path
+                UpdateNavigationPath(selectedItem);
+
+                if (selectedItem.Tag is string key)
+                {
+                    var items = GetPoliciesBySectionOrPolicyId(key);
+
+                    // Update the DataGrid with the data associated with the selected item
+                    if (items != null && items.Count > 0)
+                    {
+                        policyExplorer.myDataGrid.ItemsSource = items;
+                    }
+                    else
+                    {
+                        policyExplorer.myDataGrid.ItemsSource = null; // Clear the DataGrid if no data exists
+                    }
+                }
+            }
+        }
+
+        private List<Item> GetPoliciesBySectionOrPolicyId(string id)
+        {
+            var items = new List<Item>();
+
+            // Search in Sections
+            var section = FindSectionById(benchmarkValues.Sections, id);
+
+            if (section != null)
+            {
+                // Collect policies in this section and its subsections
+                var policies = GetAllPoliciesInSection(section);
+                foreach (var policy in policies)
+                {
+                    items.Add(
+                        new Item
+                        {
+                            ID = policy.Id,
+                            Profile = policy.Profile,
+                            Name = policy.Title,
+                            Current = "N/A",
+                            Status = "N/A",
+                            Description = GetPolicyDescription(policy.Id),
+                            DefaultValue = GetDefaultValueText(policy),
+                            Policy = policy,
+                        }
+                    );
+                }
+            }
+            else
+            {
+                // Search for a single policy
+                var policy = FindPolicyById(benchmarkValues.Sections, id);
+                if (policy != null)
+                {
+                    items.Add(
+                        new Item
+                        {
+                            ID = policy.Id,
+                            Profile = policy.Profile,
+                            Name = policy.Title,
+                            Current = "N/A",
+                            Status = "N/A",
+                            Description = GetPolicyDescription(policy.Id),
+                            DefaultValue = GetDefaultValueText(policy),
+                            Policy = policy,
+                        }
+                    );
+                }
+            }
+            items = items.Where(item => selectedProfiles.Contains(item.Profile)).ToList();
+            return items;
+        }
+
+        private string GetDefaultValueText(Policy policy)
+        {
+            if (policy.DefaultValue != null)
+            {
+                if (!string.IsNullOrEmpty(policy.DefaultValue.Value))
+                {
+                    return $"Global: {policy.DefaultValue.Value}";
+                }
+                else
+                {
+                    string domainValue = policy.DefaultValue.Domain ?? "N/A";
+                    string standaloneValue = policy.DefaultValue.Standalone ?? "N/A";
+                    return $"Domain: {domainValue}, Standalone: {standaloneValue}";
+                }
+            }
+            return "N/A";
+        }
+
+        private Section? FindSectionById(List<Section> sections, string id)
+        {
+            foreach (var section in sections)
+            {
+                if (section.Id == id)
+                    return section;
+
+                if (section.SubSections != null)
+                {
+                    var found = FindSectionById(section.SubSections, id);
+                    if (found != null)
+                        return found;
+                }
+            }
+            return null;
+        }
+
+        private Policy? FindPolicyById(List<Section> sections, string id)
+        {
+            foreach (var section in sections)
+            {
+                if (section.Policies != null)
+                {
+                    foreach (var policy in section.Policies)
+                    {
+                        if (policy.Id == id)
+                            return policy;
+                    }
+                }
+
+                if (section.SubSections != null)
+                {
+                    var found = FindPolicyById(section.SubSections, id);
+                    if (found != null)
+                        return found;
+                }
+            }
+            return null;
+        }
+
+        private List<Policy> GetAllPoliciesInSection(Section section)
+        {
+            var policies = new List<Policy>();
+
+            if (section.Policies != null)
+                policies.AddRange(section.Policies);
+
+            if (section.SubSections != null)
+            {
+                foreach (var subSection in section.SubSections)
+                {
+                    policies.AddRange(GetAllPoliciesInSection(subSection));
+                }
+            }
+
+            return policies;
+        }
+
+        private string GetPolicyDescription(string policyId)
+        {
+            var docPolicy = benchmarkDocumentation.Policies.FirstOrDefault(p => p.Id == policyId);
+            return docPolicy?.Documentation?.Description?.Text ?? "No description available.";
+        }
+
+        public void MyDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Clear the details section
+            policyExplorer.detailsTextBlock.Text = "";
+
+            // Iterate over all selected items
+            foreach (var selectedItem in policyExplorer.myDataGrid.SelectedItems)
+            {
+                if (selectedItem is Item item)
+                {
+                    var docPolicy = benchmarkDocumentation.Policies.FirstOrDefault(p =>
+                        p.Id == item.ID
+                    );
+
+                    if (docPolicy != null && docPolicy.Documentation != null)
+                    {
+                        var doc = docPolicy.Documentation;
+
+                        // Use a StringBuilder for efficient string concatenation
+                        var sb = new System.Text.StringBuilder();
+
+                        sb.AppendLine($"ID: {item.ID}");
+                        sb.AppendLine($"Name: {item.Name}");
+                        sb.AppendLine($"Profile: {item.Profile}");
+                        sb.AppendLine($"Default Value: {item.DefaultValue}");
+                        sb.AppendLine($"Current: {item.Current}");
+                        sb.AppendLine($"Status: {item.Status}");
+                        sb.AppendLine();
+
+                        if (doc.Title != null)
+                        {
+                            sb.AppendLine($"Title: {doc.Title.Text.Trim()}");
+                            sb.AppendLine();
+                        }
+
+                        if (doc.ProfileApplicability != null)
+                        {
+                            sb.AppendLine(
+                                $"Profile Applicability: {doc.ProfileApplicability.Text.Trim()}"
+                            );
+                            sb.AppendLine();
+                        }
+
+                        if (doc.Description != null)
+                        {
+                            sb.AppendLine($"Description: {doc.Description.Text.Trim()}");
+                            sb.AppendLine();
+                        }
+
+                        if (doc.Rationale != null)
+                        {
+                            sb.AppendLine($"Rationale: {doc.Rationale.Text.Trim()}");
+                            sb.AppendLine();
+                        }
+
+                        if (doc.Impact != null)
+                        {
+                            sb.AppendLine($"Impact: {doc.Impact.Text.Trim()}");
+                            sb.AppendLine();
+                        }
+
+                        if (doc.Audit != null)
+                        {
+                            sb.AppendLine($"Audit: {doc.Audit.Text.Trim()}");
+                            sb.AppendLine();
+                        }
+
+                        if (doc.Remediation != null)
+                        {
+                            sb.AppendLine($"Remediation: {doc.Remediation.Text.Trim()}");
+                            if (
+                                doc.Remediation.CodeBlock != null
+                                && doc.Remediation.CodeBlock.Lines != null
+                            )
+                            {
+                                sb.AppendLine("Code Block:");
+                                foreach (var line in doc.Remediation.CodeBlock.Lines)
+                                {
+                                    sb.AppendLine(line.Trim());
+                                }
+                            }
+                            sb.AppendLine();
+                        }
+
+                        if (doc.DefaultValue != null)
+                        {
+                            sb.AppendLine(
+                                $"Default Value (Documentation): {doc.DefaultValue.Text.Trim()}"
+                            );
+                            sb.AppendLine();
+                        }
+
+                        if (doc.References != null && doc.References.ReferenceList != null)
+                        {
+                            sb.AppendLine("References:");
+                            foreach (var reference in doc.References.ReferenceList)
+                            {
+                                sb.AppendLine($"- {reference.Text.Trim()} ({reference.Url})");
+                            }
+                            sb.AppendLine();
+                        }
+
+                        policyExplorer.detailsTextBlock.Text += sb.ToString();
+                    }
+                    else
+                    {
+                        policyExplorer.detailsTextBlock.Text +=
+                            $"ID: {item.ID}\n"
+                            + $"Name: {item.Name}\n"
+                            + $"Profile: {item.Profile}\n"
+                            + $"Default Value: {item.DefaultValue}\n"
+                            + $"Current: {item.Current}\n"
+                            + $"Status: {item.Status}\n"
+                            + $"Description: Not available\n\n";
+                    }
+                }
+            }
+
+            // Show a default message if nothing is selected
+            if (string.IsNullOrWhiteSpace(policyExplorer.detailsTextBlock.Text))
+            {
+                policyExplorer.detailsTextBlock.Text = "Select rows to view details.";
+            }
+        }
+
+        private void UpdateNavigationPath(TreeViewItem selectedItem)
+        {
+            // Build the navigation path by walking up the TreeViewItem hierarchy
+            string path = selectedItem.Header?.ToString() ?? "Unknown";
+            var parent = GetParentTreeViewItem(selectedItem);
+
+            while (parent != null)
+            {
+                path = $"{parent.Header} > {path}";
+                parent = GetParentTreeViewItem(parent);
+            }
+
+            // Update the navigationTextBlock
+            policyExplorer.navigationTextBlock.Text = path;
+        }
+
+        private TreeViewItem? GetParentTreeViewItem(DependencyObject item)
+        {
+            DependencyObject parent = VisualTreeHelper.GetParent(item);
+
+            while (parent != null && !(parent is TreeViewItem))
+            {
+                parent = VisualTreeHelper.GetParent(parent);
+            }
+
+            return parent as TreeViewItem;
+        }
+    }
+}
