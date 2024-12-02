@@ -51,16 +51,16 @@ namespace Techolics_.PolicyManagement
                         return null;
                     }
 
-                    object? value = subKey.GetValue(registryInfo.ValueName);
-                    if (value != null)
+                    object? valueObj = subKey.GetValue(registryInfo.ValueName);
+                    if (valueObj != null)
                     {
-                        return value.ToString();
+                        string rawValue = valueObj.ToString() ?? "";
+                        string displayValue = PolicyValueConverter.ConvertForDisplay(rawValue, policy.ValueType);
+                        return displayValue;
                     }
                     else
                     {
-                        Logger.Instance.WriteLog(
-                            $"Registry value not found: {registryInfo.ValueName}"
-                        );
+                        Logger.Instance.WriteLog($"Registry value not found: {registryInfo.ValueName}");
                         return null;
                     }
                 }
@@ -76,6 +76,7 @@ namespace Techolics_.PolicyManagement
         {
             if (policy.Implementation?.Registry == null)
             {
+                Logger.Instance.WriteLog($"Policy {policy.Id} has no registry implementation.");
                 return false;
             }
 
@@ -117,6 +118,9 @@ namespace Techolics_.PolicyManagement
 
             try
             {
+                // Convert value for configuration
+                string convertedValue = PolicyValueConverter.ConvertForConfiguration(value, policy.ValueType);
+
                 // Parse the 'Key' to get 'Hive' and 'Path'
                 string key = registryInfo.Key;
                 (string? hiveName, string? subKeyPath) = ParseRegistryKey(key);
@@ -145,11 +149,17 @@ namespace Techolics_.PolicyManagement
                     RegistryValueKind valueKind = GetRegistryValueKind(registryInfo.ValueType);
 
                     // Convert the value to the correct type based on ValueType
-                    object convertedValue = ConvertValue(value, valueKind);
+                    object convertedObj = ConvertValue(convertedValue, valueKind, policy.ValueType);
 
-                    subKey.SetValue(registryInfo.ValueName, convertedValue, valueKind);
+                    subKey.SetValue(registryInfo.ValueName, convertedObj, valueKind);
+                    Logger.Instance.WriteLog($"Successfully configured registry for policy {policy.Id} with value {convertedValue}.");
                     return true;
                 }
+            }
+            catch (ArgumentException ex)
+            {
+                Logger.Instance.WriteLog($"Value conversion error for policy {policy.Id}: {ex.Message}");
+                return false;
             }
             catch (Exception ex)
             {
@@ -200,6 +210,8 @@ namespace Techolics_.PolicyManagement
         {
             switch (valueType.ToUpper())
             {
+                case "BOOLEAN":
+                    return RegistryValueKind.DWord;
                 case "REG_SZ":
                 case "STRING":
                     return RegistryValueKind.String;
@@ -223,20 +235,34 @@ namespace Techolics_.PolicyManagement
             }
         }
 
-        private object ConvertValue(string value, RegistryValueKind valueKind)
+        private object ConvertValue(string value, RegistryValueKind valueKind, string valueType)
         {
             try
             {
-                switch (valueKind)
+                switch (valueType.ToUpper())
                 {
-                    case RegistryValueKind.DWord:
+                    case "BOOLEAN":
+                        // Convert "1"/"0" to integer
+                        if (int.TryParse(value, out int intValue))
+                        {
+                            return intValue;
+                        }
+                        else
+                        {
+                            throw new ArgumentException($"Invalid Boolean value: {value}");
+                        }
+                    case "REG_DWORD":
+                    case "DWORD":
                         return int.Parse(value);
-                    case RegistryValueKind.QWord:
+                    case "REG_QWORD":
+                    case "QWORD":
                         return long.Parse(value);
-                    case RegistryValueKind.Binary:
+                    case "REG_BINARY":
+                    case "BINARY":
                         // Assuming value is in hex format separated by commas
                         return value.Split(',').Select(b => Convert.ToByte(b.Trim(), 16)).ToArray();
-                    case RegistryValueKind.MultiString:
+                    case "REG_MULTI_SZ":
+                    case "MULTI_SZ":
                         // Assuming values are separated by semicolons
                         return value.Split(';');
                     default:
@@ -245,10 +271,8 @@ namespace Techolics_.PolicyManagement
             }
             catch (Exception ex)
             {
-                Logger.Instance.WriteLog(
-                    $"Error converting value '{value}' to type '{valueKind}': {ex.Message}"
-                );
-                return value;
+                Logger.Instance.WriteLog($"Error converting value '{value}' to type '{valueKind}': {ex.Message}");
+                return value; // Return as-is in case of error
             }
         }
 

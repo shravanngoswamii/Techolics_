@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Techolics_.Logging;
 
@@ -94,7 +95,12 @@ namespace Techolics_.PolicyManagement
                         currentValue = "Error";
                     }
 
-                    // Update the Current value
+                    // Update the Current value with display conversion
+                    if (!string.Equals(currentValue, "Error", StringComparison.OrdinalIgnoreCase))
+                    {
+                        currentValue = PolicyValueConverter.ConvertForDisplay(currentValue, item.Policy.ValueType);
+                    }
+
                     item.Current = currentValue;
 
                     // Check if the current value meets the ValueConstraints
@@ -122,9 +128,19 @@ namespace Techolics_.PolicyManagement
                     string op = requiredValue.Operator;
                     string required = requiredValue.Value;
 
+                    // Handle value conversion for comparison
+                    string? convertedCurrent = currentValue;
+                    string? convertedRequired = required;
+
+                    if (string.Equals(policy.ValueType, "Boolean", StringComparison.OrdinalIgnoreCase))
+                    {
+                        convertedCurrent = PolicyValueConverter.ConvertForConfiguration(currentValue, policy.ValueType);
+                        convertedRequired = PolicyValueConverter.ConvertForConfiguration(required, policy.ValueType);
+                    }
+
                     // Attempt to parse as integer
-                    bool isInt = int.TryParse(currentValue, out int currentInt);
-                    bool isRequiredInt = int.TryParse(required, out int requiredInt);
+                    bool isInt = int.TryParse(convertedCurrent, out int currentInt);
+                    bool isRequiredInt = int.TryParse(convertedRequired, out int requiredInt);
 
                     if (isInt && isRequiredInt)
                     {
@@ -148,6 +164,7 @@ namespace Techolics_.PolicyManagement
                                 break;
                             // Add other operators as needed
                             default:
+                                Logger.Instance.WriteLog($"Unsupported operator '{op}' for policy {policy.Id}.");
                                 return false;
                         }
                     }
@@ -156,17 +173,18 @@ namespace Techolics_.PolicyManagement
                         // Handle non-integer values
                         if (op == "equal")
                         {
-                            if (!string.Equals(currentValue, required, System.StringComparison.OrdinalIgnoreCase))
+                            if (!string.Equals(currentValue, required, StringComparison.OrdinalIgnoreCase))
                                 return false;
                         }
                         else if (op == "not_equal")
                         {
-                            if (string.Equals(currentValue, required, System.StringComparison.OrdinalIgnoreCase))
+                            if (string.Equals(currentValue, required, StringComparison.OrdinalIgnoreCase))
                                 return false;
                         }
                         else
                         {
                             // For other operators, return false
+                            Logger.Instance.WriteLog($"Unsupported operator '{op}' for non-integer comparison in policy {policy.Id}.");
                             return false;
                         }
                     }

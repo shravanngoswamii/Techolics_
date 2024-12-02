@@ -36,26 +36,20 @@ namespace Techolics_.PolicyManagement
 
                     var results = ps.Invoke();
 
-                    if (ps.HadErrors)
+                    if (ps.HadErrors || results.Count == 0)
                     {
                         foreach (var error in ps.Streams.Error)
                         {
                             Logger.Instance.WriteLog($"Error getting policy {policy.Id}: {error}");
                         }
-                        return null;
-                    }
-
-                    if (results.Count > 0)
-                    {
-                        var value = results[0].Properties["Value"].Value?.ToString();
-                        Logger.Instance.WriteLog($"Retrieved value for policy {policy.Id}: {value}");
-                        return value;
-                    }
-                    else
-                    {
                         Logger.Instance.WriteLog($"Policy {policy.Id} not configured.");
                         return "Not Configured";
                     }
+
+                    var value = results[0].Properties["Value"].Value?.ToString();
+                    string displayValue = PolicyValueConverter.ConvertForDisplay(value ?? "", policy.ValueType);
+                    Logger.Instance.WriteLog($"Retrieved value for policy {policy.Id}: {displayValue}");
+                    return displayValue;
                 }
             }
             catch (Exception ex)
@@ -112,6 +106,9 @@ namespace Techolics_.PolicyManagement
                     }
                 }
 
+                // Convert value for configuration
+                string convertedValue = PolicyValueConverter.ConvertForConfiguration(value, policy.ValueType);
+
                 using (PowerShell ps = PowerShell.Create())
                 {
                     ps.AddCommand("Set-GPRegistryValue")
@@ -119,7 +116,7 @@ namespace Techolics_.PolicyManagement
                       .AddParameter("Key", policyPath)
                       .AddParameter("ValueName", policyName)
                       .AddParameter("Type", "DWORD") // Adjust the type as needed
-                      .AddParameter("Value", value);
+                      .AddParameter("Value", convertedValue);
 
                     ps.Invoke();
 
@@ -137,6 +134,11 @@ namespace Techolics_.PolicyManagement
                         return true;
                     }
                 }
+            }
+            catch (ArgumentException ex)
+            {
+                Logger.Instance.WriteLog($"Value conversion error for policy {policy.Id}: {ex.Message}");
+                return false;
             }
             catch (Exception ex)
             {

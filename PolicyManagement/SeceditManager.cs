@@ -85,7 +85,9 @@ namespace Techolics_.PolicyManagement
                         var parts = line.Split('=');
                         if (parts.Length == 2)
                         {
-                            return parts[1].Trim();
+                            string rawValue = parts[1].Trim();
+                            string displayValue = PolicyValueConverter.ConvertForDisplay(rawValue, policy.ValueType);
+                            return displayValue;
                         }
                     }
                 }
@@ -160,96 +162,118 @@ namespace Techolics_.PolicyManagement
                 }
             }
 
-            templateSetting = templateSetting.Replace("%Value%", value);
-
-            // Create a temporary security template file
-            string tempTemplateFile = Path.GetTempFileName();
-
             try
             {
-                // Build the security template content
-                List<string> templateLines = new List<string>
+                // Convert value for configuration
+                string convertedValue = PolicyValueConverter.ConvertForConfiguration(value, policy.ValueType);
+                templateSetting = templateSetting.Replace("%Value%", convertedValue);
+
+                // Create a temporary security template file
+                string tempTemplateFile = Path.GetTempFileName();
+
+                try
                 {
-                    "[Unicode]",
-                    "Unicode=yes",
-                    "[Version]",
-                    "signature=\"$CHICAGO$\"",
-                    "Revision=1",
-                    "[System Access]",
-                    templateSetting
-                };
-
-                // Write the template file
-                File.WriteAllLines(tempTemplateFile, templateLines);
-
-                // Apply the template using secedit
-                string seceditPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.System),
-                    "secedit.exe"
-                );
-                if (!File.Exists(seceditPath))
-                {
-                    Logger.Instance.WriteLog("Error: secedit.exe not found.");
-                    return false;
-                }
-
-                // Apply the template
-                string logFile = Path.GetTempFileName();
-
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = seceditPath,
-                    Arguments = $"/configure /db \"{tempTemplateFile}.sdb\" /cfg \"{tempTemplateFile}\" /log \"{logFile}\" /quiet",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true,
-                };
-
-                using (var process = Process.Start(startInfo))
-                {
-                    if (process == null)
+                    // Build the security template content
+                    List<string> templateLines = new List<string>
                     {
-                        Logger.Instance.WriteLog("Error executing secedit: Process could not be started.");
+                        "[Unicode]",
+                        "Unicode=yes",
+                        "[Version]",
+                        "signature=\"$CHICAGO$\"",
+                        "Revision=1",
+                        "[System Access]",
+                        templateSetting
+                    };
+
+                    // Write the template file
+                    File.WriteAllLines(tempTemplateFile, templateLines);
+
+                    // Apply the template using secedit
+                    string seceditPath = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.System),
+                        "secedit.exe"
+                    );
+                    if (!File.Exists(seceditPath))
+                    {
+                        Logger.Instance.WriteLog("Error: secedit.exe not found.");
                         return false;
                     }
 
-                    process.WaitForExit();
+                    // Apply the template
+                    string logFile = Path.GetTempFileName();
 
-                    string error = process.StandardError.ReadToEnd();
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = seceditPath,
+                        Arguments = $"/configure /db \"{tempTemplateFile}.sdb\" /cfg \"{tempTemplateFile}\" /log \"{logFile}\" /quiet",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true,
+                    };
 
-                    if (process.ExitCode != 0)
+                    using (var process = Process.Start(startInfo))
                     {
-                        // Log the error details
-                        Logger.Instance.WriteLog($"Error executing secedit: {error.Trim()}");
-                        return false;
-                    }
-                    else
-                    {
-                        Logger.Instance.WriteLog($"Configuration applied successfully using secedit for policy {policy.Id}.");
-                        return true;
+                        if (process == null)
+                        {
+                            Logger.Instance.WriteLog("Error executing secedit: Process could not be started.");
+                            return false;
+                        }
+
+                        process.WaitForExit();
+
+                        string error = process.StandardError.ReadToEnd();
+
+                        if (process.ExitCode != 0)
+                        {
+                            // Log the error details
+                            Logger.Instance.WriteLog($"Error executing secedit: {error.Trim()}");
+                            return false;
+                        }
+                        else
+                        {
+                            Logger.Instance.WriteLog($"Configuration applied successfully using secedit for policy {policy.Id}.");
+                            return true;
+                        }
                     }
                 }
+                finally
+                {
+                    // Clean up temporary files
+                    string tempSdbFile = $"{Path.GetTempPath()}{Path.GetFileName(tempTemplateFile)}.sdb";
+                    if (File.Exists(tempTemplateFile))
+                    {
+                        try
+                        {
+                            File.Delete(tempTemplateFile);
+                        }
+                        catch
+                        {
+                            // Ignore errors during cleanup
+                        }
+                    }
+                    if (File.Exists(tempSdbFile))
+                    {
+                        try
+                        {
+                            File.Delete(tempSdbFile);
+                        }
+                        catch
+                        {
+                            // Ignore errors during cleanup
+                        }
+                    }
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                Logger.Instance.WriteLog($"Value conversion error for policy {policy.Id}: {ex.Message}");
+                return false;
             }
             catch (Exception ex)
             {
                 Logger.Instance.WriteLog($"Error configuring policy {policy.Id} using secedit: {ex.Message}");
                 return false;
-            }
-            finally
-            {
-                // Clean up temporary files
-                if (File.Exists(tempTemplateFile))
-                {
-                    try
-                    {
-                        File.Delete(tempTemplateFile);
-                    }
-                    catch
-                    {
-                        // Ignore errors during cleanup
-                    }
-                }
             }
         }
 
