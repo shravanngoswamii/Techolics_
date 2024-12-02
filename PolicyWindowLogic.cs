@@ -38,15 +38,31 @@ namespace Techolics_
 
             // Populate the TreeView
             PopulatePolicyTreeView();
+
+            // Load all policies into the DataGrid
+            LoadAllPolicies();
+
+            // Select the root item in the TreeView
+            if (policyExplorer.policyTreeView.Items.Count > 0)
+            {
+                var rootItem = policyExplorer.policyTreeView.Items[0] as TreeViewItem;
+                if (rootItem != null)
+                {
+                    rootItem.IsSelected = true;
+                }
+            }
         }
 
-        public void StartAudit()
-        {
-            auditor.AuditPolicies();
-        }
-
+        // Method to populate the TreeView
         public void PopulatePolicyTreeView()
         {
+            TreeViewItem rootItem = new TreeViewItem
+            {
+                Header = "Policy Explorer",
+                Tag = "root",
+                IsExpanded = true
+            };
+
             foreach (var section in benchmarkValues.Sections)
             {
                 TreeViewItem sectionItem = new TreeViewItem
@@ -57,10 +73,13 @@ namespace Techolics_
 
                 AddSectionsAndPolicies(sectionItem, section);
 
-                policyExplorer.policyTreeView.Items.Add(sectionItem);
+                rootItem.Items.Add(sectionItem);
             }
+
+            policyExplorer.policyTreeView.Items.Add(rootItem);
         }
 
+        // Recursive method to add sections and policies to the TreeView
         private void AddSectionsAndPolicies(TreeViewItem parentItem, Section section)
         {
             // Add sub-sections
@@ -96,6 +115,7 @@ namespace Techolics_
             }
         }
 
+        // Event handler for TreeView's SelectedItemChanged event
         public void PolicyTreeView_SelectedItemChanged(
             object sender,
             RoutedPropertyChangedEventArgs<object> e
@@ -103,26 +123,95 @@ namespace Techolics_
         {
             if (e.NewValue is TreeViewItem selectedItem)
             {
-                // Update the "Logs" section with the current navigation path
+                // Update the navigation path
                 UpdateNavigationPath(selectedItem);
 
                 if (selectedItem.Tag is string key)
                 {
-                    var items = GetPoliciesBySectionOrPolicyId(key);
-
-                    // Update the DataGrid with the data associated with the selected item
-                    if (items != null && items.Count > 0)
+                    if (key == "root")
                     {
+                        // Display all policies
+                        var items = GetAllPoliciesForSelectedProfiles();
                         policyExplorer.myDataGrid.ItemsSource = items;
                     }
                     else
                     {
-                        policyExplorer.myDataGrid.ItemsSource = null; // Clear the DataGrid if no data exists
+                        var items = GetPoliciesBySectionOrPolicyId(key);
+
+                        if (items != null && items.Count > 0)
+                        {
+                            policyExplorer.myDataGrid.ItemsSource = items;
+                        }
+                        else
+                        {
+                            policyExplorer.myDataGrid.ItemsSource = null;
+                        }
                     }
                 }
             }
         }
 
+        // Method to load all policies into the DataGrid
+        private void LoadAllPolicies()
+        {
+            // Get all policies for the selected profiles
+            var items = GetAllPoliciesForSelectedProfiles();
+
+            // Set the DataGrid's ItemsSource
+            policyExplorer.myDataGrid.ItemsSource = items;
+        }
+
+        // Method to get all policies for selected profiles
+        private List<Item> GetAllPoliciesForSelectedProfiles()
+        {
+            var items = new List<Item>();
+
+            // Get all policies in the benchmark
+            var allPolicies = GetAllPoliciesInSections(benchmarkValues.Sections);
+
+            // Filter policies by selected profiles
+            var filteredPolicies = allPolicies
+                .Where(policy => selectedProfiles.Contains(policy.Profile))
+                .ToList();
+
+            foreach (var policy in filteredPolicies)
+            {
+                items.Add(
+                    new Item
+                    {
+                        ID = policy.Id,
+                        Profile = policy.Profile,
+                        Name = policy.Title,
+                        Current = "N/A",
+                        Status = "N/A",
+                        Description = GetPolicyDescription(policy.Id),
+                        DefaultValue = GetDefaultValueText(policy),
+                        Policy = policy,
+                    }
+                );
+            }
+
+            return items;
+        }
+
+        // Recursive method to get all policies in sections
+        private List<Policy> GetAllPoliciesInSections(List<Section> sections)
+        {
+            var policies = new List<Policy>();
+
+            foreach (var section in sections)
+            {
+                if (section.Policies != null)
+                    policies.AddRange(section.Policies);
+
+                if (section.SubSections != null)
+                    policies.AddRange(GetAllPoliciesInSections(section.SubSections));
+            }
+
+            return policies;
+        }
+
+        // Method to get policies by section ID or policy ID
         private List<Item> GetPoliciesBySectionOrPolicyId(string id)
         {
             var items = new List<Item>();
@@ -176,24 +265,7 @@ namespace Techolics_
             return items;
         }
 
-        private string GetDefaultValueText(Policy policy)
-        {
-            if (policy.DefaultValue != null)
-            {
-                if (!string.IsNullOrEmpty(policy.DefaultValue.Value))
-                {
-                    return $"Global: {policy.DefaultValue.Value}";
-                }
-                else
-                {
-                    string domainValue = policy.DefaultValue.Domain ?? "N/A";
-                    string standaloneValue = policy.DefaultValue.Standalone ?? "N/A";
-                    return $"Domain: {domainValue}, Standalone: {standaloneValue}";
-                }
-            }
-            return "N/A";
-        }
-
+        // Recursive method to find a section by ID
         private Section? FindSectionById(List<Section> sections, string id)
         {
             foreach (var section in sections)
@@ -211,6 +283,7 @@ namespace Techolics_
             return null;
         }
 
+        // Recursive method to find a policy by ID
         private Policy? FindPolicyById(List<Section> sections, string id)
         {
             foreach (var section in sections)
@@ -234,6 +307,7 @@ namespace Techolics_
             return null;
         }
 
+        // Recursive method to get all policies in a section
         private List<Policy> GetAllPoliciesInSection(Section section)
         {
             var policies = new List<Policy>();
@@ -252,12 +326,33 @@ namespace Techolics_
             return policies;
         }
 
+        // Method to get the policy description
         private string GetPolicyDescription(string policyId)
         {
             var docPolicy = benchmarkDocumentation.Policies.FirstOrDefault(p => p.Id == policyId);
             return docPolicy?.Documentation?.Description?.Text ?? "No description available.";
         }
 
+        // Method to get the default value text for a policy
+        private string GetDefaultValueText(Policy policy)
+        {
+            if (policy.DefaultValue != null)
+            {
+                if (!string.IsNullOrEmpty(policy.DefaultValue.Value))
+                {
+                    return $"Global: {policy.DefaultValue.Value}";
+                }
+                else
+                {
+                    string domainValue = policy.DefaultValue.Domain ?? "N/A";
+                    string standaloneValue = policy.DefaultValue.Standalone ?? "N/A";
+                    return $"Domain: {domainValue}, Standalone: {standaloneValue}";
+                }
+            }
+            return "N/A";
+        }
+
+        // Event handler for DataGrid's SelectionChanged event
         public void MyDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Clear the details section
@@ -383,6 +478,7 @@ namespace Techolics_
             }
         }
 
+        // Method to update the navigation path
         private void UpdateNavigationPath(TreeViewItem selectedItem)
         {
             // Build the navigation path by walking up the TreeViewItem hierarchy
@@ -399,6 +495,7 @@ namespace Techolics_
             policyExplorer.navigationTextBlock.Text = path;
         }
 
+        // Helper method to get parent TreeViewItem
         private TreeViewItem? GetParentTreeViewItem(DependencyObject item)
         {
             DependencyObject parent = VisualTreeHelper.GetParent(item);
@@ -410,10 +507,45 @@ namespace Techolics_
 
             return parent as TreeViewItem;
         }
-        public void StartConfig(bool configureAll)
+
+        // Method to get all items from DataGrid
+        public List<Item> GetAllItems()
         {
-            auditor.ConfigurePolicies(configureAll);
+            var items = policyExplorer.myDataGrid.ItemsSource as IEnumerable<Item>;
+            if (items == null)
+            {
+                return new List<Item>();
+            }
+            return items.ToList();
         }
 
+        // Method to get selected items from DataGrid
+        public List<Item> GetSelectedItems()
+        {
+            var items = policyExplorer.myDataGrid.ItemsSource as IEnumerable<Item>;
+            if (items == null)
+            {
+                return new List<Item>();
+            }
+            return items.Where(item => item.IsSelected).ToList();
+        }
+
+        // Method to start audit on selected items
+        public void StartAudit(List<Item> selectedItems)
+        {
+            auditor.AuditPolicies(selectedItems);
+        }
+
+        // Method to start configuration on selected items
+        public void StartConfig(List<Item> selectedItems)
+        {
+            auditor.ConfigurePolicies(selectedItems);
+        }
+
+        // Method to start revert on selected items
+        public void StartRevert(List<Item> selectedItems)
+        {
+            auditor.RevertPolicies(selectedItems);
+        }
     }
 }

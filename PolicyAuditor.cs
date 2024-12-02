@@ -12,27 +12,29 @@ namespace Techolics_
         private CISBenchmark benchmarkValues;
         private CISBenchmarkDocumentation benchmarkDocumentation;
 
-        public PolicyAuditor(PolicyExplorerWindow policyExplorer, CISBenchmark benchmarkValues, CISBenchmarkDocumentation benchmarkDocumentation)
+        public PolicyAuditor(
+            PolicyExplorerWindow policyExplorer,
+            CISBenchmark benchmarkValues,
+            CISBenchmarkDocumentation benchmarkDocumentation
+        )
         {
             this.policyExplorer = policyExplorer;
             this.benchmarkValues = benchmarkValues;
             this.benchmarkDocumentation = benchmarkDocumentation;
         }
 
-        public void AuditPolicies()
+        public void AuditPolicies(List<Item> selectedItems)
         {
             // Clear previous logs
             policyExplorer.logsTextBox.Text = "";
 
-            // Get the items from the DataGrid
-            var items = policyExplorer.myDataGrid.ItemsSource as IEnumerable<Item>;
-            if (items == null)
+            if (selectedItems == null || selectedItems.Count == 0)
             {
                 policyExplorer.logsTextBox.Text = "No policies to audit.";
                 return;
             }
 
-            foreach (var item in items)
+            foreach (var item in selectedItems)
             {
                 if (item.Policy != null)
                 {
@@ -49,7 +51,8 @@ namespace Techolics_
                     item.Status = isCompliant ? "Pass" : "Fail";
 
                     // Log the result
-                    policyExplorer.logsTextBox.Text += $"Policy {item.ID}: {item.Name} - {item.Status}\n";
+                    policyExplorer.logsTextBox.Text +=
+                        $"Policy {item.ID}: {item.Name} - {item.Status}\n";
 
                     // Log any errors
                     if (currentValue.StartsWith("Error"))
@@ -67,8 +70,20 @@ namespace Techolics_
         {
             if (policy.Implementation != null && policy.Implementation.Secedit != null)
             {
+                // Check if TemplateSetting is null
+                if (string.IsNullOrEmpty(policy.Implementation.Secedit.TemplateSetting))
+                {
+                    return "Error: TemplateSetting is null or empty.";
+                }
+
+                string templateSetting = policy.Implementation.Secedit.TemplateSetting;
+
+                // Rest of your code...
                 // Check if secedit.exe exists
-                string seceditPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "secedit.exe");
+                string seceditPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.System),
+                    "secedit.exe"
+                );
                 if (!File.Exists(seceditPath))
                 {
                     return "Error executing secedit: secedit.exe not found.";
@@ -86,12 +101,17 @@ namespace Techolics_
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
-                        CreateNoWindow = true
+                        CreateNoWindow = true,
                         // Ensure the application runs as administrator
                     };
 
                     using (var process = Process.Start(startInfo))
                     {
+                        if (process == null)
+                        {
+                            return "Error executing secedit: Process could not be started.";
+                        }
+
                         process.WaitForExit();
 
                         string output = process.StandardOutput.ReadToEnd();
@@ -108,7 +128,7 @@ namespace Techolics_
                     var lines = File.ReadAllLines(tempFile);
 
                     // Find the setting for the policy
-                    string templateSetting = policy.Implementation.Secedit.TemplateSetting;
+                    // string templateSetting = policy.Implementation.Secedit.TemplateSetting; // Already defined above
                     // Example: "PasswordHistorySize = %Value%"
 
                     // Extract the setting name
@@ -198,12 +218,24 @@ namespace Techolics_
                         // Handle non-integer values
                         if (op == "equal")
                         {
-                            if (!string.Equals(currentValue, required, StringComparison.OrdinalIgnoreCase))
+                            if (
+                                !string.Equals(
+                                    currentValue,
+                                    required,
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                            )
                                 return false;
                         }
                         else if (op == "not_equal")
                         {
-                            if (string.Equals(currentValue, required, StringComparison.OrdinalIgnoreCase))
+                            if (
+                                string.Equals(
+                                    currentValue,
+                                    required,
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                            )
                                 return false;
                         }
                         else
@@ -222,26 +254,12 @@ namespace Techolics_
             return true;
         }
 
-        public void ConfigurePolicies(bool configureAll)
+        public void ConfigurePolicies(List<Item> selectedItems)
         {
             // Clear previous logs
             policyExplorer.logsTextBox.Text = "";
 
-            // Get the items from the DataGrid
-            var items = policyExplorer.myDataGrid.ItemsSource as IEnumerable<Item>;
-            if (items == null)
-            {
-                policyExplorer.logsTextBox.Text = "No policies to configure.";
-                return;
-            }
-
-            // If not configuring all, filter to only selected items
-            if (!configureAll)
-            {
-                items = policyExplorer.myDataGrid.SelectedItems.Cast<Item>();
-            }
-
-            if (!items.Any())
+            if (selectedItems == null || !selectedItems.Any())
             {
                 policyExplorer.logsTextBox.Text = "No policies selected for configuration.";
                 return;
@@ -260,20 +278,35 @@ namespace Techolics_
                     "[Version]",
                     "signature=\"$CHICAGO$\"",
                     "Revision=1",
-                    "[System Access]"
+                    "[System Access]",
                 };
 
-                foreach (var item in items)
+                foreach (var item in selectedItems)
                 {
                     var policy = item.Policy;
-                    if (policy != null && policy.Implementation != null && policy.Implementation.Secedit != null)
+                    if (
+                        policy != null
+                        && policy.Implementation != null
+                        && policy.Implementation.Secedit != null
+                    )
                     {
+                        // Check if TemplateSetting is null
+                        if (string.IsNullOrEmpty(policy.Implementation.Secedit.TemplateSetting))
+                        {
+                            policyExplorer.logsTextBox.Text += $"TemplateSetting is null or empty for policy {policy.Id}\n";
+                            continue;
+                        }
+
                         string templateSetting = policy.Implementation.Secedit.TemplateSetting;
 
                         // Replace %Value% with the required value
-                        if (policy.ValueConstraints != null && policy.ValueConstraints.RequiredValues != null)
+                        if (
+                            policy.ValueConstraints != null
+                            && policy.ValueConstraints.RequiredValues != null
+                        )
                         {
-                            var requiredValue = policy.ValueConstraints.RequiredValues.FirstOrDefault();
+                            var requiredValue =
+                                policy.ValueConstraints.RequiredValues.FirstOrDefault();
                             if (requiredValue != null)
                             {
                                 string value = requiredValue.Value;
@@ -284,12 +317,154 @@ namespace Techolics_
                             }
                             else
                             {
-                                policyExplorer.logsTextBox.Text += $"No required value for policy {policy.Id}\n";
+                                policyExplorer.logsTextBox.Text +=
+                                    $"No required value for policy {policy.Id}\n";
                             }
                         }
                         else
                         {
-                            policyExplorer.logsTextBox.Text += $"No value constraints for policy {policy.Id}\n";
+                            policyExplorer.logsTextBox.Text +=
+                                $"No value constraints for policy {policy.Id}\n";
+                        }
+                    }
+                }
+
+                // Write the template file
+                File.WriteAllLines(tempTemplateFile, templateLines);
+
+                // Apply the template using secedit
+                string seceditPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.System),
+                    "secedit.exe"
+                );
+                if (!File.Exists(seceditPath))
+                {
+                    policyExplorer.logsTextBox.Text = "Error: secedit.exe not found.";
+                    return;
+                }
+
+                // Apply the template
+                string logFile = Path.GetTempFileName();
+
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = seceditPath,
+                    Arguments =
+                        $"/configure /db \"{tempTemplateFile}.sdb\" /cfg \"{tempTemplateFile}\" /log \"{logFile}\" /quiet",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
+                };
+
+                using (var process = Process.Start(startInfo))
+                {
+                    if (process == null)
+                    {
+                        policyExplorer.logsTextBox.Text += "Error executing secedit: Process could not be started.\n";
+                        return;
+                    }
+
+                    process.WaitForExit();
+
+                    string output = process.StandardOutput.ReadToEnd();
+                    string error = process.StandardError.ReadToEnd();
+
+                    if (process.ExitCode != 0)
+                    {
+                        // Log the error details
+                        policyExplorer.logsTextBox.Text +=
+                            $"Error executing secedit: {error.Trim()}\n";
+                        return;
+                    }
+                    else
+                    {
+                        policyExplorer.logsTextBox.Text += "Configuration applied successfully.\n";
+                    }
+                }
+
+                // Re-audit the policies to update the status
+                AuditPolicies(selectedItems);
+            }
+            catch (Exception ex)
+            {
+                policyExplorer.logsTextBox.Text += $"Error configuring policies: {ex.Message}\n";
+            }
+            finally
+            {
+                // Clean up temporary files
+                if (File.Exists(tempTemplateFile))
+                {
+                    try
+                    {
+                        File.Delete(tempTemplateFile);
+                    }
+                    catch
+                    {
+                        // Ignore errors during cleanup
+                    }
+                }
+            }
+        }
+
+        public void RevertPolicies(List<Item> selectedItems)
+        {
+            // Clear previous logs
+            policyExplorer.logsTextBox.Text = "";
+
+            if (selectedItems == null || !selectedItems.Any())
+            {
+                policyExplorer.logsTextBox.Text = "No policies selected for reverting.";
+                return;
+            }
+
+            // Determine if the system is standalone or domain
+            bool isStandalone = IsStandalone();
+
+            // Create a temporary security template file
+            string tempTemplateFile = Path.GetTempFileName();
+
+            try
+            {
+                // Build the security template content
+                List<string> templateLines = new List<string>
+                {
+                    "[Unicode]",
+                    "Unicode=yes",
+                    "[Version]",
+                    "signature=\"$CHICAGO$\"",
+                    "Revision=1",
+                    "[System Access]"
+                };
+
+                foreach (var item in selectedItems)
+                {
+                    var policy = item.Policy;
+                    if (policy != null && policy.Implementation != null && policy.Implementation.Secedit != null)
+                    {
+                        // Check if TemplateSetting is null
+                        if (string.IsNullOrEmpty(policy.Implementation.Secedit.TemplateSetting))
+                        {
+                            policyExplorer.logsTextBox.Text += $"TemplateSetting is null or empty for policy {policy.Id}\n";
+                            continue;
+                        }
+
+                        string templateSetting = policy.Implementation.Secedit.TemplateSetting;
+
+                        // Get the default value
+                        string? defaultValue = GetPolicyDefaultValue(policy, isStandalone);
+
+                        if (defaultValue != null)
+                        {
+                            // Replace %Value% with the default value
+                            templateSetting = templateSetting.Replace("%Value%", defaultValue);
+
+                            // Add to template lines
+                            templateLines.Add(templateSetting);
+                        }
+                        else
+                        {
+                            policyExplorer.logsTextBox.Text += $"No default value for policy {policy.Id}\n";
                         }
                     }
                 }
@@ -320,6 +495,12 @@ namespace Techolics_
 
                 using (var process = Process.Start(startInfo))
                 {
+                    if (process == null)
+                    {
+                        policyExplorer.logsTextBox.Text += "Error executing secedit: Process could not be started.\n";
+                        return;
+                    }
+
                     process.WaitForExit();
 
                     string output = process.StandardOutput.ReadToEnd();
@@ -333,16 +514,16 @@ namespace Techolics_
                     }
                     else
                     {
-                        policyExplorer.logsTextBox.Text += "Configuration applied successfully.\n";
+                        policyExplorer.logsTextBox.Text += "Policies reverted to default successfully.\n";
                     }
                 }
 
                 // Re-audit the policies to update the status
-                AuditPolicies();
+                AuditPolicies(selectedItems);
             }
             catch (Exception ex)
             {
-                policyExplorer.logsTextBox.Text += $"Error configuring policies: {ex.Message}\n";
+                policyExplorer.logsTextBox.Text += $"Error reverting policies: {ex.Message}\n";
             }
             finally
             {
@@ -359,6 +540,36 @@ namespace Techolics_
                     }
                 }
             }
+        }
+
+        private bool IsStandalone()
+        {
+            return Environment.MachineName == Environment.UserDomainName;
+        }
+
+        private string? GetPolicyDefaultValue(Policy policy, bool isStandalone)
+        {
+            if (policy.DefaultValue != null)
+            {
+                if (!string.IsNullOrEmpty(policy.DefaultValue.Value))
+                {
+                    // Global default value
+                    return policy.DefaultValue.Value;
+                }
+                else
+                {
+                    // Domain or Standalone default values
+                    if (isStandalone)
+                    {
+                        return policy.DefaultValue.Standalone;
+                    }
+                    else
+                    {
+                        return policy.DefaultValue.Domain;
+                    }
+                }
+            }
+            return null;
         }
     }
 }

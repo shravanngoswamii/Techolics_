@@ -241,6 +241,7 @@ namespace Techolics_
     // Item class to represent data for the DataGrid
     public class Item
     {
+        public bool IsSelected { get; set; }
         public string ID { get; set; } = "";
         public string Profile { get; set; } = "";
         public string Name { get; set; } = "";
