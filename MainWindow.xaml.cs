@@ -54,7 +54,11 @@ namespace Techolics_
             string version = "Unknown";
             try
             {
-                using (var searcher = new ManagementObjectSearcher("SELECT Version FROM Win32_OperatingSystem"))
+                using (
+                    var searcher = new ManagementObjectSearcher(
+                        "SELECT Version FROM Win32_OperatingSystem"
+                    )
+                )
                 {
                     foreach (ManagementObject os in searcher.Get())
                     {
@@ -74,7 +78,11 @@ namespace Techolics_
             string edition = "Unknown";
             try
             {
-                using (var searcher = new ManagementObjectSearcher("SELECT Caption FROM Win32_OperatingSystem"))
+                using (
+                    var searcher = new ManagementObjectSearcher(
+                        "SELECT Caption FROM Win32_OperatingSystem"
+                    )
+                )
                 {
                     foreach (ManagementObject os in searcher.Get())
                     {
@@ -117,10 +125,14 @@ namespace Techolics_
 
         private void AuditButton_Click(object sender, RoutedEventArgs e)
         {
-
             if (SelectedItemsListBox.Items.Count == 0)
             {
-                MessageBox.Show("Please select at least one profile.", "No Profile Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(
+                    "Please select at least one profile.",
+                    "No Profile Selected",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning
+                );
                 return;
             }
 
@@ -131,7 +143,10 @@ namespace Techolics_
                 return;
             }
 
-            PolicyExplorerWindow policyExplorerWindow = new PolicyExplorerWindow(GetSelectedProfiles(), "Audit");
+            PolicyExplorerWindow policyExplorerWindow = new PolicyExplorerWindow(
+                GetSelectedProfiles(),
+                "Audit"
+            );
             policyExplorerWindow.Show();
             this.Close();
         }
@@ -140,7 +155,12 @@ namespace Techolics_
         {
             if (SelectedItemsListBox.Items.Count == 0)
             {
-                MessageBox.Show("Please select at least one profile.", "No Profile Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(
+                    "Please select at least one profile.",
+                    "No Profile Selected",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning
+                );
                 return;
             }
 
@@ -151,7 +171,10 @@ namespace Techolics_
                 return;
             }
 
-            PolicyExplorerWindow policyExplorerWindow = new PolicyExplorerWindow(GetSelectedProfiles(), "Config");
+            PolicyExplorerWindow policyExplorerWindow = new PolicyExplorerWindow(
+                GetSelectedProfiles(),
+                "Config"
+            );
             policyExplorerWindow.Show();
             this.Close();
         }
@@ -161,10 +184,14 @@ namespace Techolics_
             var profiles = new List<string>();
             foreach (ListBoxItem item in SelectedItemsListBox.Items)
             {
-                profiles.Add(item.Content.ToString());
+                if (item.Content != null)
+                {
+                    profiles.Add(item.Content.ToString()!);
+                }
             }
             return profiles;
         }
+
 
         // Event Handlers for Buttons
         private void AddButton_Click(object sender, RoutedEventArgs e)
@@ -176,7 +203,12 @@ namespace Techolics_
             }
             else
             {
-                MessageBox.Show("Please select an item to add.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(
+                    "Please select an item to add.",
+                    "No Selection",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information
+                );
             }
         }
 
@@ -186,7 +218,10 @@ namespace Techolics_
 
             foreach (var item in AvailableItemsListBox.Items)
             {
-                itemsToMove.Add(item as ListBoxItem);
+                if (item is ListBoxItem listBoxItem)
+                {
+                    itemsToMove.Add(listBoxItem);
+                }
             }
 
             foreach (var item in itemsToMove)
@@ -205,7 +240,12 @@ namespace Techolics_
             }
             else
             {
-                MessageBox.Show("Please select an item to remove.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show(
+                    "Please select an item to remove.",
+                    "No Selection",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information
+                );
             }
         }
 
@@ -215,7 +255,10 @@ namespace Techolics_
 
             foreach (var item in SelectedItemsListBox.Items)
             {
-                itemsToMove.Add(item as ListBoxItem);
+                if (item is ListBoxItem listBoxItem)
+                {
+                    itemsToMove.Add(listBoxItem);
+                }
             }
 
             foreach (var item in itemsToMove)

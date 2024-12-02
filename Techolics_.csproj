@@ -6,6 +6,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <PublishSingleFile>true</PublishSingleFile> <!-- Enable single file publishing -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier> <!-- Specify the target platform -->
+    <SelfContained>true</SelfContained> <!-- Optional: Make the app self-contained (includes .NET runtime) -->
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,6 +33,7 @@
 
   <ItemGroup>
     <PackageReference Include="Extended.Wpf.Toolkit" Version="4.6.1" />
+    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.4.6" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.Management" Version="9.0.0" />
   </ItemGroup>

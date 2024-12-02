@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Windows;
-using System.Windows.Controls.Primitives;
+using System.Windows.Threading;
+using Techolics_.PolicyManagement;
 
 namespace Techolics_
 {
@@ -9,6 +12,9 @@ namespace Techolics_
         private PolicyWindowLogic logic;
         private List<string> selectedProfiles;
         private string operation;
+
+        // Add a DispatcherTimer to periodically refresh the logs
+        private DispatcherTimer logRefreshTimer;
 
         public PolicyExplorerWindow(List<string> selectedProfiles, string operation)
         {
@@ -35,6 +41,73 @@ namespace Techolics_
             {
                 // All buttons are visible
             }
+
+            // Initialize and start the log refresh timer
+            logRefreshTimer = new DispatcherTimer();
+            logRefreshTimer.Interval = TimeSpan.FromSeconds(1);
+            logRefreshTimer.Tick += LogRefreshTimer_Tick;
+            logRefreshTimer.Start();
+
+            this.Closed += Window_Closed;
+        }
+
+        private void LogRefreshTimer_Tick(object? sender, EventArgs e)
+        {
+            RefreshLogs();
+        }
+
+        private void RefreshLogs()
+        {
+            try
+            {
+                string logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+                string logFileName = "Techolics_Log.txt"; // Use the same name as in Logger.cs
+                string logFilePath = Path.Combine(logDirectory, logFileName);
+
+                if (File.Exists(logFilePath))
+                {
+                    string[] allLines = File.ReadAllLines(logFilePath);
+
+                    // Clean and format the logs
+                    var formattedLines = new List<string>();
+                    foreach (var line in allLines)
+                    {
+                        // Example of cleaning: Remove file paths and line numbers
+                        string cleanedLine = CleanLogLine(line);
+                        formattedLines.Add(cleanedLine);
+                    }
+
+                    logsTextBox.Text = string.Join(Environment.NewLine, formattedLines);
+                    logsTextBox.ScrollToEnd();
+                }
+                else
+                {
+                    logsTextBox.Text = "No logs available.";
+                }
+            }
+            catch (Exception ex)
+            {
+                logsTextBox.Text = $"Failed to read logs: {ex.Message}";
+            }
+        }
+
+        private string CleanLogLine(string logLine)
+        {
+            // Remove file path, member name, and line number for readability
+            int fileIndex = logLine.IndexOf("| File:");
+            if (fileIndex >= 0)
+            {
+                logLine = logLine.Substring(0, fileIndex).Trim();
+            }
+
+            // Optionally, format the log line further if needed
+            return logLine;
+        }
+
+        private void Window_Closed(object? sender, EventArgs e)
+        {
+            // Stop the timer when the window is closed
+            logRefreshTimer.Stop();
         }
 
         private void AuditButton_Click(object sender, RoutedEventArgs e)
@@ -135,6 +208,11 @@ namespace Techolics_
         {
             // Implement edit functionality if needed
             MessageBox.Show("Edit functionality is not implemented yet.");
+        }
+
+        private void ExitMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
         }
     }
 }

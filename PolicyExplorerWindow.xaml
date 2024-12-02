@@ -6,70 +6,50 @@
     Width="1000"
     Height="600"
     Icon="/assets/logo.png"
-    WindowStartupLocation="CenterScreen">
+    WindowStartupLocation="CenterScreen"
+    Closed="Window_Closed">
     <Grid>
-        <!--  Define two rows: one for the navigation bar, one for the content  -->
+        <!-- Define two rows: one for the navigation bar, one for the content -->
         <Grid.RowDefinitions>
-            <!--  Navigation Bar  -->
+            <!-- Navigation Bar -->
             <RowDefinition Height="Auto" />
-            <!--  Content Area  -->
+            <!-- Content Area -->
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!--  Navigation Bar  -->
+        <!-- Navigation Bar -->
         <Menu Grid.Row="0">
             <MenuItem Header="File">
-                <MenuItem Header="New" />
-                <MenuItem Header="Open" />
-                <MenuItem Header="Save" />
-                <Separator />
-                <MenuItem Header="Exit" />
+                <MenuItem Header="Exit" Click="ExitMenuItem_Click" />
             </MenuItem>
-            <MenuItem Header="Edit">
-                <MenuItem Header="Undo" />
-                <MenuItem Header="Redo" />
-                <Separator />
-                <MenuItem Header="Copy" />
-                <MenuItem Header="Paste" />
-            </MenuItem>
-            <MenuItem Header="View">
-                <MenuItem Header="Zoom In" />
-                <MenuItem Header="Zoom Out" />
-            </MenuItem>
-            <MenuItem Header="Tools">
-                <MenuItem Header="Options" />
-            </MenuItem>
-            <MenuItem Header="Export" />
-            <MenuItem Header="Import" />
         </Menu>
 
-        <!--  Content Area with Resizable Columns  -->
+        <!-- Content Area with Resizable Columns -->
         <Grid Grid.Row="1" Margin="3">
-            <!--  Define columns including GridSplitters  -->
+            <!-- Define columns including GridSplitters -->
             <Grid.ColumnDefinitions>
-                <!--  Column 0: Policy Explorer  -->
+                <!-- Column 0: Policy Explorer -->
                 <ColumnDefinition Width="1*" />
-                <!--  Column 1: GridSplitter  -->
+                <!-- Column 1: GridSplitter -->
                 <ColumnDefinition Width="5" />
-                <!--  Column 2: Display Content  -->
+                <!-- Column 2: Display Content -->
                 <ColumnDefinition Width="3*" />
-                <!--  Column 3: GridSplitter  -->
+                <!-- Column 3: GridSplitter -->
                 <ColumnDefinition Width="5" />
-                <!--  Column 4: Details  -->
+                <!-- Column 4: Details -->
                 <ColumnDefinition Width="2*" />
             </Grid.ColumnDefinitions>
 
-            <!--  First Column: Policy Explorer  -->
+            <!-- First Column: Policy Explorer -->
             <Grid Grid.Column="0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <!--  Navigation Bar  -->
+                    <!-- Navigation Bar -->
                     <RowDefinition Height="*" />
-                    <!--  Content Area  -->
                 </Grid.RowDefinitions>
 
                 <Grid Grid.Row="0" Margin="10,0,0,0">
-                    <!--  Heading  -->
+                    <!-- Heading -->
                     <TextBlock
                         Margin="0,0,0,0"
                         Background="#f5f5f5"
@@ -84,12 +64,12 @@
                         Background="#f5f5f5"
                         BorderBrush="#dcdcdc"
                         BorderThickness="1">
-                        <!--  TreeViewItems will be added dynamically in code  -->
+                        <!-- TreeViewItems will be added dynamically in code -->
                     </TreeView>
                 </Grid>
             </Grid>
 
-            <!--  GridSplitter between Column 0 and Column 2  -->
+            <!-- GridSplitter between Column 0 and Column 2 -->
             <GridSplitter
                 Grid.Column="1"
                 Width="2"
@@ -100,21 +80,22 @@
                 ResizeDirection="Columns"
                 ShowsPreview="True" />
 
-            <!--  Second Column: Display Content  -->
+            <!-- Second Column: Display Content -->
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
-                    <!--  Location  -->
+                    <!-- Location -->
                     <RowDefinition Height="22" />
-                    <!--  Data Grid  -->
+                    <!-- Data Grid -->
                     <RowDefinition Height="4*" />
-                    <!--  GridSplitter  -->
+                    <!-- GridSplitter -->
                     <RowDefinition Height="5" />
-                    <!--  Plain Text Box  -->
+                    <!-- Log TextBox -->
                     <RowDefinition Height="*" />
-                    <!--  Buttons  -->
+                    <!-- Buttons -->
                     <RowDefinition Height="50" />
                 </Grid.RowDefinitions>
 
+                <!-- Navigation TextBlock -->
                 <Grid Grid.Row="0">
                     <TextBlock
                         x:Name="navigationTextBlock"
@@ -124,6 +105,7 @@
                         Text="Path" />
                 </Grid>
 
+                <!-- DataGrid -->
                 <DataGrid
                     x:Name="myDataGrid"
                     Grid.Row="1"
@@ -135,9 +117,8 @@
                     HeadersVisibility="Column"
                     IsReadOnly="False"
                     SelectionMode="Extended">
-
                     <DataGrid.Columns>
-                        <!--  Add CheckBox column for selection  -->
+                        <!-- Add CheckBox column for selection -->
                         <DataGridCheckBoxColumn
                             Width="Auto"
                             Binding="{Binding IsSelected, Mode=TwoWay}"
@@ -174,11 +155,28 @@
                             Width="Auto"
                             Binding="{Binding Status}"
                             Header="Status"
-                            IsReadOnly="True" />
+                            IsReadOnly="True">
+                            <!-- Apply CellStyle for Status Column -->
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Status}" Value="Fail">
+                                            <Setter Property="Background" Value="LightCoral" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Status}" Value="Pass">
+                                            <Setter Property="Background" Value="LightGreen" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
                     </DataGrid.Columns>
+
+                    <!-- Remove RowStyle to prevent entire row coloring -->
+                    <!-- If you have other RowStyles, ensure they don't interfere -->
                 </DataGrid>
 
-
+                <!-- GridSplitter between DataGrid and Log TextBox -->
                 <GridSplitter
                     Grid.Row="2"
                     Height="2"
@@ -189,16 +187,17 @@
                     ResizeDirection="Rows"
                     ShowsPreview="True" />
 
+                <!-- Log TextBox -->
                 <Grid Grid.Row="3" Margin="5,5,5,5">
                     <Grid.RowDefinitions>
-                        <!--  Heading  -->
+                        <!-- Heading -->
                         <RowDefinition Height="Auto" />
-                        <!--  Content Area  -->
+                        <!-- Content Area -->
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
                     <Grid Grid.Row="0" Margin="10,0,0,0">
-                        <!--  Heading  -->
+                        <!-- Heading -->
                         <TextBlock
                             Margin="0,0,0,0"
                             Background="#f5f5f5"
@@ -217,14 +216,12 @@
                             FontSize="14"
                             IsReadOnly="True"
                             TextWrapping="Wrap"
-                            VerticalScrollBarVisibility="Auto">
-                            This is the logs section where logs can be displayed.
-                        </TextBox>
+                            VerticalScrollBarVisibility="Auto" />
                     </Grid>
                 </Grid>
-                <Grid Grid.Row="4" Margin="5,5,5,5">
 
-                    <!--  Update Column Definitions to include Revert Button  -->
+                <!-- Buttons -->
+                <Grid Grid.Row="4" Margin="5,5,5,5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
@@ -234,7 +231,7 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <!--  Buttons  -->
+                    <!-- Buttons -->
                     <Button
                         x:Name="AuditButton"
                         Grid.Column="0"
@@ -279,7 +276,7 @@
                         Click="EditButton_Click"
                         Content="Edit" />
 
-                    <!--  Add Revert Button  -->
+                    <!-- Revert Button -->
                     <Button
                         x:Name="RevertButton"
                         Grid.Column="5"
@@ -288,11 +285,10 @@
                         VerticalAlignment="Stretch"
                         Click="RevertButton_Click"
                         Content="Revert" />
-
                 </Grid>
             </Grid>
 
-            <!--  GridSplitter between Column 2 and Column 4  -->
+            <!-- GridSplitter between Column 2 and Column 4 -->
             <GridSplitter
                 Grid.Column="3"
                 Width="2"
@@ -303,7 +299,7 @@
                 ResizeDirection="Columns"
                 ShowsPreview="True" />
 
-            <!--  Third Column: Detail Section  -->
+            <!-- Third Column: Detail Section -->
             <Border
                 Grid.Column="4"
                 Padding="10"
@@ -313,14 +309,14 @@
                 CornerRadius="5">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <!--  Heading  -->
+                        <!-- Heading -->
                         <TextBlock
                             Margin="0,0,0,10"
                             FontSize="16"
                             FontWeight="Bold"
                             Text="Details" />
 
-                        <!--  Content  -->
+                        <!-- Content -->
                         <TextBlock
                             x:Name="detailsTextBlock"
                             FontFamily="Consolas"

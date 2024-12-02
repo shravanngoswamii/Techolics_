@@ -3,6 +3,8 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Techolics_.Logging;
+using Techolics_.PolicyManagement;
 
 namespace Techolics_
 {
@@ -11,7 +13,6 @@ namespace Techolics_
         private CISBenchmark benchmarkValues;
         private CISBenchmarkDocumentation benchmarkDocumentation;
         private PolicyExplorerWindow policyExplorer;
-        private PolicyAuditor auditor;
         private DataLoader dataLoader;
         private List<string> selectedProfiles;
         private string operation;
@@ -32,9 +33,6 @@ namespace Techolics_
             benchmarkDocumentation = dataLoader.LoadBenchmarkDocumentation(
                 "data/CIS_Benchmark_Documentation.xaml"
             );
-
-            // Initialize the auditor
-            auditor = new PolicyAuditor(policyExplorer, benchmarkValues, benchmarkDocumentation);
 
             // Populate the TreeView
             PopulatePolicyTreeView();
@@ -60,7 +58,7 @@ namespace Techolics_
             {
                 Header = "Policy Explorer",
                 Tag = "root",
-                IsExpanded = true
+                IsExpanded = true,
             };
 
             foreach (var section in benchmarkValues.Sections)
@@ -530,22 +528,34 @@ namespace Techolics_
             return items.Where(item => item.IsSelected).ToList();
         }
 
-        // Method to start audit on selected items
         public void StartAudit(List<Item> selectedItems)
         {
+            var auditor = new PolicyAuditor(
+                policyExplorer,
+                benchmarkValues,
+                benchmarkDocumentation
+            );
             auditor.AuditPolicies(selectedItems);
         }
 
-        // Method to start configuration on selected items
         public void StartConfig(List<Item> selectedItems)
         {
-            auditor.ConfigurePolicies(selectedItems);
+            var configurator = new PolicyConfigurator(
+                policyExplorer,
+                benchmarkValues,
+                benchmarkDocumentation
+            );
+            configurator.ConfigurePolicies(selectedItems);
         }
 
-        // Method to start revert on selected items
         public void StartRevert(List<Item> selectedItems)
         {
-            auditor.RevertPolicies(selectedItems);
+            var configurator = new PolicyConfigurator(
+                policyExplorer,
+                benchmarkValues,
+                benchmarkDocumentation
+            );
+            configurator.ConfigurePolicies(selectedItems, isRevert: true);
         }
     }
 }

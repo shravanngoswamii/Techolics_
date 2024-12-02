@@ -14,7 +14,12 @@ namespace Techolics_
         private void YesButton_Click(object sender, RoutedEventArgs e)
         {
             // Restart the application with admin privileges
-            var exeName = Process.GetCurrentProcess().MainModule.FileName;
+            var exeName = Process.GetCurrentProcess().MainModule?.FileName;
+            if (exeName == null)
+            {
+                MessageBox.Show("Failed to retrieve the executable name.");
+                return;
+            }
             var startInfo = new ProcessStartInfo(exeName)
             {
                 UseShellExecute = true,
@@ -30,6 +35,7 @@ namespace Techolics_
                 MessageBox.Show("Failed to restart with admin privileges: " + ex.Message);
             }
         }
+
 
         private void NoButton_Click(object sender, RoutedEventArgs e)
         {
