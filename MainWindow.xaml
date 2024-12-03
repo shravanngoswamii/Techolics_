@@ -77,8 +77,8 @@
                     </StackPanel>
                 </Grid>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Admin Privileges: " FontWeight="Bold" Margin="0,0,5,0" />
-                    <Ellipse x:Name="AdminStatusEllipse" Width="15" Height="15" VerticalAlignment="Center" Fill="Green" />
+                    <TextBlock Text="Admin Privileges: " FontWeight="Bold" Margin="0,0,1,0" />
+                    <Ellipse x:Name="AdminStatusEllipse" Width="10" Height="10" Margin="0,3,0,0" VerticalAlignment="Center" Fill="Green" />
                 </StackPanel>
             </Grid>
         </Grid>
