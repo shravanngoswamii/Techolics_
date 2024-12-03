@@ -1,12 +1,16 @@
-﻿using System;
+﻿// MainWindow.xaml.cs
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Management;
 using System.Security.Principal;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using Techolics_.Logging;
 
 namespace Techolics_
 {
@@ -14,9 +18,30 @@ namespace Techolics_
     {
         private DispatcherTimer timer;
 
+        // Master list to preserve original order
+        private List<Profile> AllProfiles = new List<Profile>
+        {
+            new Profile { Name = "L1", Description = "Level 1 (L1) - Corporate/Enterprise Environment (general use)" },
+            new Profile { Name = "L1+BL", Description = "Level 1 (L1) + BitLocker (BL)" },
+            new Profile { Name = "L2", Description = "Level 2 (L2) - High Security/Sensitive Data Environment (limited functionality)" },
+            new Profile { Name = "L2+BL", Description = "Level 2 (L2) + BitLocker (BL)" },
+            new Profile { Name = "BL", Description = "BitLocker (BL) - optional add-on for when BitLocker is deployed" }
+        };
+
+        // ObservableCollections for data binding
+        public ObservableCollection<Profile> AvailableProfiles { get; set; }
+        public ObservableCollection<Profile> SelectedProfiles { get; set; }
+
         public MainWindow()
         {
             InitializeComponent();
+
+            // Initialize ObservableCollections
+            AvailableProfiles = new ObservableCollection<Profile>(AllProfiles);
+            SelectedProfiles = new ObservableCollection<Profile>();
+
+            // Set DataContext for data binding
+            this.DataContext = this;
 
             // Display system details
             UsernameTextBlock.Text = Environment.UserName;
@@ -42,6 +67,9 @@ namespace Techolics_
             timer.Interval = TimeSpan.FromSeconds(1);
             timer.Tick += Timer_Tick;
             timer.Start();
+
+            // Initialize button states
+            UpdateToggleButtons();
         }
 
         private void Timer_Tick(object? sender, EventArgs e)
@@ -125,7 +153,7 @@ namespace Techolics_
 
         private void AuditButton_Click(object sender, RoutedEventArgs e)
         {
-            if (SelectedItemsListBox.Items.Count == 0)
+            if (SelectedProfiles.Count == 0)
             {
                 MessageBox.Show(
                     "Please select at least one profile.",
@@ -144,7 +172,7 @@ namespace Techolics_
             }
 
             PolicyExplorerWindow policyExplorerWindow = new PolicyExplorerWindow(
-                GetSelectedProfiles(),
+                GetSelectedProfileNames(),
                 "Audit"
             );
             policyExplorerWindow.Show();
@@ -153,7 +181,7 @@ namespace Techolics_
 
         private void ConfigButton_Click(object sender, RoutedEventArgs e)
         {
-            if (SelectedItemsListBox.Items.Count == 0)
+            if (SelectedProfiles.Count == 0)
             {
                 MessageBox.Show(
                     "Please select at least one profile.",
@@ -172,39 +200,48 @@ namespace Techolics_
             }
 
             PolicyExplorerWindow policyExplorerWindow = new PolicyExplorerWindow(
-                GetSelectedProfiles(),
+                GetSelectedProfileNames(),
                 "Config"
             );
             policyExplorerWindow.Show();
             this.Close();
         }
 
-        private List<string> GetSelectedProfiles()
+        private List<string> GetSelectedProfileNames()
         {
-            var profiles = new List<string>();
-            foreach (ListBoxItem item in SelectedItemsListBox.Items)
-            {
-                if (item.Content != null)
-                {
-                    profiles.Add(item.Content.ToString()!);
-                }
-            }
-            return profiles;
+            return SelectedProfiles.Select(p => p.Name).ToList();
         }
 
+        #region Button Event Handlers
 
-        // Event Handlers for Buttons
-        private void AddButton_Click(object sender, RoutedEventArgs e)
+        // Toggle Add/Remove Button
+        private void ToggleAddRemoveButton_Click(object sender, RoutedEventArgs e)
         {
-            if (AvailableItemsListBox.SelectedItem is ListBoxItem selectedItem)
+            // Determine which list has a selected item
+            if (AvailableItemsListBox.SelectedItem is Profile selectedAvailableProfile)
             {
-                AvailableItemsListBox.Items.Remove(selectedItem);
-                SelectedItemsListBox.Items.Add(selectedItem);
+                // Add the selected profile
+                AvailableProfiles.Remove(selectedAvailableProfile);
+                SelectedProfiles.Add(selectedAvailableProfile);
+                Logger.Instance.WriteLog($"Added profile: {selectedAvailableProfile.Name}");
+
+                // Update button states
+                UpdateToggleButtons();
+            }
+            else if (SelectedItemsListBox.SelectedItem is Profile selectedSelectedProfile)
+            {
+                // Remove the selected profile
+                SelectedProfiles.Remove(selectedSelectedProfile);
+                InsertProfileBackToAvailable(selectedSelectedProfile);
+                Logger.Instance.WriteLog($"Removed profile: {selectedSelectedProfile.Name}");
+
+                // Update button states
+                UpdateToggleButtons();
             }
             else
             {
                 MessageBox.Show(
-                    "Please select an item to add.",
+                    "Please select an item to add or remove.",
                     "No Selection",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information
@@ -212,59 +249,189 @@ namespace Techolics_
             }
         }
 
-        private void AddAllButton_Click(object sender, RoutedEventArgs e)
+        // Toggle Add All / Remove All Button
+        private void ToggleAddAllRemoveAllButton_Click(object sender, RoutedEventArgs e)
         {
-            var itemsToMove = new List<ListBoxItem>();
-
-            foreach (var item in AvailableItemsListBox.Items)
+            if (AddAllRemoveAllText.Text == "Add All")
             {
-                if (item is ListBoxItem listBoxItem)
+                // Add all profiles
+                var profilesToAdd = AvailableProfiles.ToList();
+                foreach (var profile in profilesToAdd)
                 {
-                    itemsToMove.Add(listBoxItem);
+                    AvailableProfiles.Remove(profile);
+                    SelectedProfiles.Add(profile);
+                    Logger.Instance.WriteLog($"Added profile: {profile.Name}");
                 }
-            }
 
-            foreach (var item in itemsToMove)
-            {
-                AvailableItemsListBox.Items.Remove(item);
-                SelectedItemsListBox.Items.Add(item);
-            }
-        }
-
-        private void RemoveButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (SelectedItemsListBox.SelectedItem is ListBoxItem selectedItem)
-            {
-                SelectedItemsListBox.Items.Remove(selectedItem);
-                AvailableItemsListBox.Items.Add(selectedItem);
+                // Update button text and icon
+                AddAllRemoveAllText.Text = "Remove All";
+                try
+                {
+                    AddAllRemoveAllIcon.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/remove.png"));
+                }
+                catch (Exception ex)
+                {
+                    Logger.Instance.WriteLog($"Error loading remove all icon: {ex.Message}");
+                }
             }
             else
             {
-                MessageBox.Show(
-                    "Please select an item to remove.",
-                    "No Selection",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information
-                );
-            }
-        }
-
-        private void RemoveAllButton_Click(object sender, RoutedEventArgs e)
-        {
-            var itemsToMove = new List<ListBoxItem>();
-
-            foreach (var item in SelectedItemsListBox.Items)
-            {
-                if (item is ListBoxItem listBoxItem)
+                // Remove all profiles
+                var profilesToRemove = SelectedProfiles.ToList();
+                foreach (var profile in profilesToRemove)
                 {
-                    itemsToMove.Add(listBoxItem);
+                    SelectedProfiles.Remove(profile);
+                    InsertProfileBackToAvailable(profile);
+                    Logger.Instance.WriteLog($"Removed profile: {profile.Name}");
+                }
+
+                // Update button text and icon
+                AddAllRemoveAllText.Text = "Add All";
+                try
+                {
+                    AddAllRemoveAllIcon.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/add.png"));
+                }
+                catch (Exception ex)
+                {
+                    Logger.Instance.WriteLog($"Error loading add all icon: {ex.Message}");
                 }
             }
 
-            foreach (var item in itemsToMove)
+            // Update the Add/Remove button based on current selections
+            UpdateToggleButtons();
+        }
+
+        #endregion
+
+        #region Selection Changed Handlers
+
+        private void AvailableItemsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateToggleButtons();
+        }
+
+        private void SelectedItemsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateToggleButtons();
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        private void UpdateToggleButtons()
+        {
+            // Update Add/Remove Button
+            if (AvailableItemsListBox.SelectedItem != null)
             {
-                SelectedItemsListBox.Items.Remove(item);
-                AvailableItemsListBox.Items.Add(item);
+                AddRemoveText.Text = "Add";
+                try
+                {
+                    AddRemoveIcon.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/add.png"));
+                }
+                catch (Exception ex)
+                {
+                    Logger.Instance.WriteLog($"Error loading add icon: {ex.Message}");
+                }
+                ToggleAddRemoveButton.IsEnabled = true;
+            }
+            else if (SelectedItemsListBox.SelectedItem != null)
+            {
+                AddRemoveText.Text = "Remove";
+                try
+                {
+                    AddRemoveIcon.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/remove.png"));
+                }
+                catch (Exception ex)
+                {
+                    Logger.Instance.WriteLog($"Error loading remove icon: {ex.Message}");
+                }
+                ToggleAddRemoveButton.IsEnabled = true;
+            }
+            else
+            {
+                AddRemoveText.Text = "Add";
+                try
+                {
+                    AddRemoveIcon.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/add.png"));
+                }
+                catch (Exception ex)
+                {
+                    Logger.Instance.WriteLog($"Error loading add icon: {ex.Message}");
+                }
+                ToggleAddRemoveButton.IsEnabled = false;
+            }
+
+            // Update Add All / Remove All Button
+            if (AvailableProfiles.Count > 0)
+            {
+                AddAllRemoveAllText.Text = "Add All";
+                try
+                {
+                    AddAllRemoveAllIcon.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/add.png"));
+                }
+                catch (Exception ex)
+                {
+                    Logger.Instance.WriteLog($"Error loading add all icon: {ex.Message}");
+                }
+            }
+            else
+            {
+                AddAllRemoveAllText.Text = "Remove All";
+                try
+                {
+                    AddAllRemoveAllIcon.Source = new BitmapImage(new Uri("pack://application:,,,/Assets/remove.png"));
+                }
+                catch (Exception ex)
+                {
+                    Logger.Instance.WriteLog($"Error loading remove all icon: {ex.Message}");
+                }
+            }
+        }
+
+        private void InsertProfileBackToAvailable(Profile profile)
+        {
+            // Find the index of the profile in the master list
+            int originalIndex = AllProfiles.IndexOf(profile);
+            if (originalIndex == -1)
+            {
+                // If not found, add to the end
+                AvailableProfiles.Add(profile);
+                return;
+            }
+
+            // Find the first profile in AvailableProfiles with a higher original index
+            for (int i = 0; i < AvailableProfiles.Count; i++)
+            {
+                if (AllProfiles.IndexOf(AvailableProfiles[i]) > originalIndex)
+                {
+                    AvailableProfiles.Insert(i, profile);
+                    return;
+                }
+            }
+
+            // If no profile has a higher index, add to the end
+            AvailableProfiles.Add(profile);
+        }
+
+        #endregion
+
+        // Internal Profile class
+        public class Profile
+        {
+            public string Name { get; set; }
+            public string Description { get; set; }
+
+            public Profile()
+            {
+                Name = string.Empty;
+                Description = string.Empty;
+            }
+
+            public Profile(string name, string description)
+            {
+                Name = name;
+                Description = description;
             }
         }
     }

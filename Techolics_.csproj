@@ -12,7 +12,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="assets\add.png" />
     <None Remove="assets\logo.png" />
+    <None Remove="assets\remove.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,7 +41,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="assets\add.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="assets\logo.png" />
+    <Resource Include="assets\remove.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
 </Project>
