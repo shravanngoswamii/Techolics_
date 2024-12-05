@@ -98,10 +98,17 @@
                 profile="L1"
                 title="Relax minimum password length limits"
                 value_type="Boolean">
-                <DefaultValue value="false" />
+                <DefaultValue value="disabled" />
                 <ValueConstraints>
-                    <RequiredValue operator="equal" value="true" />
+                    <RequiredValue operator="equal" value="enabled" />
                 </ValueConstraints>
+				<Implementation>
+					<Registry>
+						<Key>HKLM\System\CurrentControlSet\Control\SAM</Key>
+						<ValueName>RelaxMinimumPasswordLengthLimits</ValueName>
+						<ValueType>DWORD</ValueType>
+					</Registry>
+				</Implementation>
             </Policy>
             <Policy
                 id="1.1.7"
@@ -109,10 +116,15 @@
                 profile="L1"
                 title="Store passwords using reversible encryption"
                 value_type="Boolean">
-                <DefaultValue value="false" />
+                <DefaultValue value="disabled" />
                 <ValueConstraints>
-                    <RequiredValue operator="equal" value="false" />
+                    <RequiredValue operator="equal" value="disabled" />
                 </ValueConstraints>
+				<Implementation>
+					<Secedit>
+						<TemplateSetting>ClearTextPassword = %Value%</TemplateSetting>
+					</Secedit>
+				</Implementation>
             </Policy>
         </Section>
         <Section id="1.2" title="Account Lockout Policy">

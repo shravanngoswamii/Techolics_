@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Xml.Serialization;
 
 namespace Techolics_
@@ -239,16 +240,140 @@ namespace Techolics_
     }
 
     // Item class to represent data for the DataGrid
-    public class Item
+    public class Item : INotifyPropertyChanged
     {
-        public bool IsSelected { get; set; }
-        public string ID { get; set; } = "";
-        public string Profile { get; set; } = "";
-        public string Name { get; set; } = "";
-        public string Current { get; set; } = "";
-        public string Status { get; set; } = "";
-        public string Description { get; set; } = "";
-        public string DefaultValue { get; set; } = "";
-        public Policy? Policy { get; set; } // Added property
+        private bool _isSelected;
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set
+            {
+                if (_isSelected != value)
+                {
+                    _isSelected = value;
+                    OnPropertyChanged(nameof(IsSelected));
+                }
+            }
+        }
+
+        private string _id = "";
+        public string ID
+        {
+            get => _id;
+            set
+            {
+                if (_id != value)
+                {
+                    _id = value;
+                    OnPropertyChanged(nameof(ID));
+                }
+            }
+        }
+
+        private string _profile = "";
+        public string Profile
+        {
+            get => _profile;
+            set
+            {
+                if (_profile != value)
+                {
+                    _profile = value;
+                    OnPropertyChanged(nameof(Profile));
+                }
+            }
+        }
+
+        private string _name = "";
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                if (_name != value)
+                {
+                    _name = value;
+                    OnPropertyChanged(nameof(Name));
+                }
+            }
+        }
+
+        private string _current = "";
+        public string Current
+        {
+            get => _current;
+            set
+            {
+                if (_current != value)
+                {
+                    _current = value;
+                    OnPropertyChanged(nameof(Current));
+                }
+            }
+        }
+
+        private string _status = "";
+        public string Status
+        {
+            get => _status;
+            set
+            {
+                if (_status != value)
+                {
+                    _status = value;
+                    OnPropertyChanged(nameof(Status));
+                }
+            }
+        }
+
+        private string _description = "";
+        public string Description
+        {
+            get => _description;
+            set
+            {
+                if (_description != value)
+                {
+                    _description = value;
+                    OnPropertyChanged(nameof(Description));
+                }
+            }
+        }
+
+        private string _defaultValue = "";
+        public string DefaultValue
+        {
+            get => _defaultValue;
+            set
+            {
+                if (_defaultValue != value)
+                {
+                    _defaultValue = value;
+                    OnPropertyChanged(nameof(DefaultValue));
+                }
+            }
+        }
+
+        private Policy? _policy;
+        public Policy? Policy
+        {
+            get => _policy;
+            set
+            {
+                if (_policy != value)
+                {
+                    _policy = value;
+                    OnPropertyChanged(nameof(Policy));
+                }
+            }
+        }
+
+        // Implement INotifyPropertyChanged
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

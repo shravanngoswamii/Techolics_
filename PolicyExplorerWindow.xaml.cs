@@ -1,9 +1,12 @@
-﻿using System;
+﻿// PolicyExplorerWindow.xaml.cs
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Threading;
+using Techolics_.Logging;
 using Techolics_.PolicyManagement;
 
 namespace Techolics_
@@ -17,6 +20,9 @@ namespace Techolics_
         // Add a DispatcherTimer to periodically refresh the logs
         private DispatcherTimer logRefreshTimer;
 
+        // Use ObservableCollection for dynamic updates
+        public ObservableCollection<Item> Items { get; set; } = new ObservableCollection<Item>();
+
         public PolicyExplorerWindow(List<string> selectedProfiles, string operation)
         {
             InitializeComponent();
@@ -27,9 +33,13 @@ namespace Techolics_
 
             logic = new PolicyWindowLogic(this, selectedProfiles, operation);
 
+            // Set the DataGrid's ItemsSource to the ObservableCollection
+            myDataGrid.ItemsSource = Items;
+
             // Hook up event handlers
             policyTreeView.SelectedItemChanged += logic.PolicyTreeView_SelectedItemChanged;
-            myDataGrid.SelectionChanged += logic.MyDataGrid_SelectionChanged;
+            // Remove DataGrid's SelectionChanged if it's handled via IsSelected bindings
+            // myDataGrid.SelectionChanged += logic.MyDataGrid_SelectionChanged;
 
             // Control button visibility based on operation
             if (operation == "Audit")
@@ -161,15 +171,24 @@ namespace Techolics_
 
         private void SelectAllCheckBox_Click(object sender, RoutedEventArgs e)
         {
-            bool newValue = (SelectAllCheckBox.IsChecked == true);
-            var items = myDataGrid.ItemsSource as IEnumerable<Item>;
-            if (items != null)
+            try
             {
-                foreach (var item in items)
+                bool newValue = (SelectAllCheckBox.IsChecked == true);
+                foreach (var item in Items)
                 {
                     item.IsSelected = newValue;
                 }
-                myDataGrid.Items.Refresh();
+
+                // Optionally, update the selection in the DataGrid
+                // This is handled by bindings, so no need to call Items.Refresh()
+
+                // Optionally, log the action
+                Logger.Instance.WriteLog($"Select All clicked. New value: {newValue}");
+            }
+            catch (Exception ex)
+            {
+                Logger.Instance.WriteLog($"Error in SelectAllCheckBox_Click: {ex.Message}");
+                MessageBox.Show("An error occurred while selecting all policies.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

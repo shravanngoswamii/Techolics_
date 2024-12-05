@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿// PolicyWindowLogic.cs
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using Techolics_.Logging;
 using Techolics_.PolicyManagement;
 
 namespace Techolics_
@@ -130,7 +131,12 @@ namespace Techolics_
                     {
                         // Display all policies
                         var items = GetAllPoliciesForSelectedProfiles();
-                        policyExplorer.myDataGrid.ItemsSource = items;
+                        // Clear existing items and add new ones
+                        policyExplorer.Items.Clear();
+                        foreach (var item in items)
+                        {
+                            policyExplorer.Items.Add(item);
+                        }
                     }
                     else
                     {
@@ -138,11 +144,16 @@ namespace Techolics_
 
                         if (items != null && items.Count > 0)
                         {
-                            policyExplorer.myDataGrid.ItemsSource = items;
+                            // Clear existing items and add new ones
+                            policyExplorer.Items.Clear();
+                            foreach (var item in items)
+                            {
+                                policyExplorer.Items.Add(item);
+                            }
                         }
                         else
                         {
-                            policyExplorer.myDataGrid.ItemsSource = null;
+                            policyExplorer.Items.Clear();
                         }
                     }
                 }
@@ -155,8 +166,12 @@ namespace Techolics_
             // Get all policies for the selected profiles
             var items = GetAllPoliciesForSelectedProfiles();
 
-            // Set the DataGrid's ItemsSource
-            policyExplorer.myDataGrid.ItemsSource = items;
+            // Clear existing items and add new ones
+            policyExplorer.Items.Clear();
+            foreach (var item in items)
+            {
+                policyExplorer.Items.Add(item);
+            }
         }
 
         // Method to get all policies for selected profiles
@@ -350,7 +365,7 @@ namespace Techolics_
             return "N/A";
         }
 
-        // Event handler for DataGrid's SelectionChanged event
+        // Event handler for DataGrid's SelectionChanged event (Optional)
         public void MyDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             // Clear the details section
@@ -509,23 +524,14 @@ namespace Techolics_
         // Method to get all items from DataGrid
         public List<Item> GetAllItems()
         {
-            var items = policyExplorer.myDataGrid.ItemsSource as IEnumerable<Item>;
-            if (items == null)
-            {
-                return new List<Item>();
-            }
+            var items = policyExplorer.Items;
             return items.ToList();
         }
 
         // Method to get selected items from DataGrid
         public List<Item> GetSelectedItems()
         {
-            var items = policyExplorer.myDataGrid.ItemsSource as IEnumerable<Item>;
-            if (items == null)
-            {
-                return new List<Item>();
-            }
-            return items.Where(item => item.IsSelected).ToList();
+            return policyExplorer.Items.Where(item => item.IsSelected).ToList();
         }
 
         public void StartAudit(List<Item> selectedItems)

@@ -121,7 +121,7 @@
                         <!-- Add CheckBox column for selection -->
                         <DataGridCheckBoxColumn
                             Width="Auto"
-                            Binding="{Binding IsSelected, Mode=TwoWay}"
+                            Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                             IsReadOnly="False">
                             <DataGridCheckBoxColumn.Header>
                                 <CheckBox
@@ -165,6 +165,12 @@
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding Status}" Value="Pass">
                                             <Setter Property="Background" Value="LightGreen" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Status}" Value="Not Defined">
+                                            <Setter Property="Background" Value="LightYellow" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Status}" Value="Error">
+                                            <Setter Property="Background" Value="LightGray" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>

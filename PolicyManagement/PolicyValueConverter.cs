@@ -1,4 +1,5 @@
-﻿using System;
+﻿// PolicyValueConverter.cs
+using System;
 
 namespace Techolics_.PolicyManagement
 {
@@ -6,7 +7,7 @@ namespace Techolics_.PolicyManagement
     {
         /// <summary>
         /// Converts the policy value based on its value type.
-        /// For Boolean types, converts "true"/"false" to "1"/"0".
+        /// For Boolean types, converts "true"/"false" or "enabled"/"disabled" to "1"/"0".
         /// Otherwise, returns the original value.
         /// </summary>
         /// <param name="value">The original value.</param>
@@ -16,11 +17,13 @@ namespace Techolics_.PolicyManagement
         {
             if (string.Equals(valueType, "Boolean", StringComparison.OrdinalIgnoreCase))
             {
-                if (string.Equals(value, "true", StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(value, "true", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(value, "enabled", StringComparison.OrdinalIgnoreCase))
                 {
                     return "1";
                 }
-                else if (string.Equals(value, "false", StringComparison.OrdinalIgnoreCase))
+                else if (string.Equals(value, "false", StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(value, "disabled", StringComparison.OrdinalIgnoreCase))
                 {
                     return "0";
                 }
@@ -36,10 +39,10 @@ namespace Techolics_.PolicyManagement
 
         /// <summary>
         /// Converts the policy value from configuration format to display format.
-        /// For Boolean types, converts "1"/"0" to "true"/"false".
+        /// For Boolean types, converts "1" to "enabled" and "0" to "disabled".
         /// Otherwise, returns the original value.
         /// </summary>
-        /// <param name="value">The value from configuration.</param>
+        /// <param name="value">The value from configuration ("1"/"0").</param>
         /// <param name="valueType">The type of the value.</param>
         /// <returns>The converted value as string.</returns>
         public static string ConvertForDisplay(string value, string valueType)
@@ -48,11 +51,11 @@ namespace Techolics_.PolicyManagement
             {
                 if (value == "1")
                 {
-                    return "true";
+                    return "Enabled";
                 }
                 else if (value == "0")
                 {
-                    return "false";
+                    return "Disabled";
                 }
                 else
                 {
