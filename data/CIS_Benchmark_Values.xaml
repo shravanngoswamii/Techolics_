@@ -256,10 +256,15 @@
                 profile="L1"
                 title="Adjust memory quotas for a process"
                 value_type="String">
-                <DefaultValue value="Administrators, LOCAL SERVICE, NETWORK SERVICE" />
+                <DefaultValue value="Administrators, LocalService, NetworkService" />
                 <ValueConstraints>
-                    <RequiredValue operator="equal" value="Administrators, LOCAL SERVICE, NETWORK SERVICE" />
+                    <RequiredValue operator="equal" value="Administrators, LocalService, NetworkService" />
                 </ValueConstraints>
+				<Implementation>
+					<Secedit section="Privilege Rights">
+                        <TemplateSetting>SeIncreaseQuotaPrivilege = %Value%</TemplateSetting>
+                    </Secedit>
+                </Implementation>
             </Policy>
             <Policy
                 id="2.2.5"
@@ -271,6 +276,11 @@
                 <ValueConstraints>
                     <RequiredValue operator="equal" value="Administrators, Users" />
                 </ValueConstraints>
+				<Implementation>
+					<Secedit section="Privilege Rights">
+                        <TemplateSetting>SeInteractiveLogonRight = %Value%</TemplateSetting>
+                    </Secedit>
+                </Implementation>
             </Policy>
             <Policy
                 id="2.2.6"
@@ -282,6 +292,11 @@
                 <ValueConstraints>
                     <RequiredValue operator="equal" value="Administrators, Remote Desktop Users" />
                 </ValueConstraints>
+				<Implementation>
+					<Secedit section="Privilege Rights">
+                        <TemplateSetting>SeRemoteInteractiveLogonRight = %Value%</TemplateSetting>
+                    </Secedit>
+                </Implementation>
             </Policy>
             <Policy
                 id="2.2.7"
@@ -293,6 +308,11 @@
                 <ValueConstraints>
                     <RequiredValue operator="equal" value="Administrators" />
                 </ValueConstraints>
+				<Implementation>
+					<Secedit section="Privilege Rights">
+                        <TemplateSetting>SeBackupPrivilege = %Value%</TemplateSetting>
+                    </Secedit>
+                </Implementation>
             </Policy>
             <Policy
                 id="2.2.8"
@@ -300,10 +320,15 @@
                 profile="L1"
                 title="Change the system time"
                 value_type="String">
-                <DefaultValue value="Administrators, LOCAL SERVICE" />
+                <DefaultValue value="Administrators, LocalService" />
                 <ValueConstraints>
-                    <RequiredValue operator="equal" value="Administrators, LOCAL SERVICE" />
+                    <RequiredValue operator="equal" value="Administrators, LocalService" />
                 </ValueConstraints>
+				<Implementation>
+					<Secedit section="Privilege Rights">
+                        <TemplateSetting>SeSystemtimePrivilege = %Value%</TemplateSetting>
+                    </Secedit>
+                </Implementation>
             </Policy>
             <Policy
                 id="2.2.9"
@@ -311,10 +336,15 @@
                 profile="L1"
                 title="Change the time zone"
                 value_type="String">
-                <DefaultValue value="Administrators, LOCAL SERVICE, Users" />
+                <DefaultValue value="Administrators, LocalService, Users" />
                 <ValueConstraints>
-                    <RequiredValue operator="equal" value="Administrators, LOCAL SERVICE, Users" />
+                    <RequiredValue operator="equal" value="Administrators, LocalService, Users" />
                 </ValueConstraints>
+				<Implementation>
+					<Secedit section="Privilege Rights">
+                        <TemplateSetting>SeTimeZonePrivilege = %Value%</TemplateSetting>
+                    </Secedit>
+                </Implementation>
             </Policy>
         </Section>
     </Section>

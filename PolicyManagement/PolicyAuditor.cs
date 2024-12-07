@@ -181,11 +181,9 @@ namespace Techolics_.PolicyManagement
                 {
                     try
                     {
-                        // Implement comparison based on operator
                         string op = requiredValue.Operator;
                         string required = requiredValue.Value;
 
-                        // Handle value conversion for comparison
                         string convertedCurrent = currentValue;
                         string convertedRequired = required;
 
@@ -207,10 +205,10 @@ namespace Techolics_.PolicyManagement
                             );
                         }
 
-                        // Attempt to parse as integer
                         bool isInt = int.TryParse(convertedCurrent, out int currentInt);
                         bool isRequiredInt = int.TryParse(convertedRequired, out int requiredInt);
 
+                        // Handle integer comparisons
                         if (isInt && isRequiredInt)
                         {
                             switch (op)
@@ -231,7 +229,6 @@ namespace Techolics_.PolicyManagement
                                     if (currentInt > requiredInt)
                                         return false;
                                     break;
-                                // Add other operators as needed
                                 default:
                                     Logger.Instance.WriteLog(
                                         $"Unsupported operator '{op}' for policy {policy.Id}."
@@ -241,35 +238,93 @@ namespace Techolics_.PolicyManagement
                         }
                         else
                         {
-                            // Handle non-integer values
-                            switch (op)
+                            // Handle string comparisons, ignoring order for multiple values
+                            // Split by comma, trim, and sort to ensure order does not matter
+                            if (
+                                string.Equals(
+                                    policy.ValueType,
+                                    "String",
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                            )
                             {
-                                case "equal":
-                                    if (
-                                        !string.Equals(
-                                            currentValue,
-                                            required,
-                                            StringComparison.OrdinalIgnoreCase
+                                // Split both current and required into sets
+                                var currentParts = convertedCurrent
+                                    .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                    .Select(x => x.Trim())
+                                    .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+                                    .ToList();
+
+                                var requiredParts = convertedRequired
+                                    .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                    .Select(x => x.Trim())
+                                    .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+                                    .ToList();
+
+                                switch (op)
+                                {
+                                    case "equal":
+                                        // Check if both sets contain exactly the same elements
+                                        if (
+                                            currentParts.Count != requiredParts.Count
+                                            || !currentParts.SequenceEqual(
+                                                requiredParts,
+                                                StringComparer.OrdinalIgnoreCase
+                                            )
                                         )
-                                    )
-                                        return false;
-                                    break;
-                                case "not_equal":
-                                    if (
-                                        string.Equals(
-                                            currentValue,
-                                            required,
-                                            StringComparison.OrdinalIgnoreCase
+                                            return false;
+                                        break;
+
+                                    case "not_equal":
+                                        // Check if sets differ
+                                        if (
+                                            currentParts.Count == requiredParts.Count
+                                            && currentParts.SequenceEqual(
+                                                requiredParts,
+                                                StringComparer.OrdinalIgnoreCase
+                                            )
                                         )
-                                    )
+                                            return false;
+                                        break;
+
+                                    default:
+                                        Logger.Instance.WriteLog(
+                                            $"Unsupported operator '{op}' for non-integer comparison in policy {policy.Id}."
+                                        );
                                         return false;
-                                    break;
-                                // For other operators, you can define additional cases or default behavior
-                                default:
-                                    Logger.Instance.WriteLog(
-                                        $"Unsupported operator '{op}' for non-integer comparison in policy {policy.Id}."
-                                    );
-                                    return false;
+                                }
+                            }
+                            else
+                            {
+                                // For non-string (or unknown) types, fallback to simple comparison
+                                switch (op)
+                                {
+                                    case "equal":
+                                        if (
+                                            !string.Equals(
+                                                currentValue,
+                                                required,
+                                                StringComparison.OrdinalIgnoreCase
+                                            )
+                                        )
+                                            return false;
+                                        break;
+                                    case "not_equal":
+                                        if (
+                                            string.Equals(
+                                                currentValue,
+                                                required,
+                                                StringComparison.OrdinalIgnoreCase
+                                            )
+                                        )
+                                            return false;
+                                        break;
+                                    default:
+                                        Logger.Instance.WriteLog(
+                                            $"Unsupported operator '{op}' for policy {policy.Id}."
+                                        );
+                                        return false;
+                                }
                             }
                         }
                     }
