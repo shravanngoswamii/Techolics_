@@ -102,13 +102,13 @@
                 <ValueConstraints>
                     <RequiredValue operator="equal" value="enabled" />
                 </ValueConstraints>
-				<Implementation>
-					<Registry>
-						<Key>HKLM\System\CurrentControlSet\Control\SAM</Key>
-						<ValueName>RelaxMinimumPasswordLengthLimits</ValueName>
-						<ValueType>DWORD</ValueType>
-					</Registry>
-				</Implementation>
+                <Implementation>
+                    <Registry>
+                        <Key>HKLM\System\CurrentControlSet\Control\SAM</Key>
+                        <ValueName>RelaxMinimumPasswordLengthLimits</ValueName>
+                        <ValueType>DWORD</ValueType>
+                    </Registry>
+                </Implementation>
             </Policy>
             <Policy
                 id="1.1.7"
@@ -120,13 +120,17 @@
                 <ValueConstraints>
                     <RequiredValue operator="equal" value="disabled" />
                 </ValueConstraints>
-				<Implementation>
-					<Secedit>
-						<TemplateSetting>ClearTextPassword = %Value%</TemplateSetting>
-					</Secedit>
-				</Implementation>
+                <Implementation>
+                    <Secedit>
+                        <TemplateSetting>ClearTextPassword = %Value%</TemplateSetting>
+                    </Secedit>
+                </Implementation>
             </Policy>
         </Section>
+        <!--
+            // TO-DO
+            XAML data need depend-on value for Account policies as Reset account lockout counter after policy requires Account Lockout duration to be configured
+        -->
         <Section id="1.2" title="Account Lockout Policy">
             <Policy
                 id="1.2.1"
@@ -134,10 +138,15 @@
                 profile="L1"
                 title="Account lockout duration"
                 value_type="Integer">
-                <DefaultValue value="None" />
+                <DefaultValue value="10" />
                 <ValueConstraints>
                     <RequiredValue operator="greater_or_equal" value="15" />
                 </ValueConstraints>
+                <Implementation>
+                    <Secedit>
+                        <TemplateSetting>LockoutDuration = %Value%</TemplateSetting>
+                    </Secedit>
+                </Implementation>
             </Policy>
             <Policy
                 id="1.2.2"
@@ -145,11 +154,16 @@
                 profile="L1"
                 title="Account lockout threshold"
                 value_type="Integer">
-                <DefaultValue value="0" />
+                <DefaultValue value="10" />
                 <ValueConstraints>
                     <RequiredValue operator="less_or_equal" value="5" />
                     <RequiredValue operator="not_equal" value="0" />
                 </ValueConstraints>
+                <Implementation>
+                    <Secedit>
+                        <TemplateSetting>LockoutBadCount = %Value%</TemplateSetting>
+                    </Secedit>
+                </Implementation>
             </Policy>
             <Policy
                 id="1.2.3"
@@ -157,10 +171,15 @@
                 profile="L1"
                 title="Allow Administrator account lockout"
                 value_type="Boolean">
-                <DefaultValue value="false" />
+                <DefaultValue value="disabled" />
                 <ValueConstraints>
-                    <RequiredValue operator="equal" value="true" />
+                    <RequiredValue operator="equal" value="enabled" />
                 </ValueConstraints>
+                <Implementation>
+                    <Secedit>
+                        <TemplateSetting>AllowAdministratorLockout = %Value%</TemplateSetting>
+                    </Secedit>
+                </Implementation>
             </Policy>
             <Policy
                 id="1.2.4"
@@ -168,10 +187,15 @@
                 profile="L1"
                 title="Reset account lockout counter after"
                 value_type="Integer">
-                <DefaultValue value="None" />
+                <DefaultValue value="10" />
                 <ValueConstraints>
                     <RequiredValue operator="greater_or_equal" value="15" />
                 </ValueConstraints>
+                <Implementation>
+                    <Secedit>
+                        <TemplateSetting>ResetLockoutCount = %Value%</TemplateSetting>
+                    </Secedit>
+                </Implementation>
             </Policy>
         </Section>
     </Section>
@@ -184,10 +208,15 @@
                 profile="L1"
                 title="Access Credential Manager as a trusted caller"
                 value_type="String">
-                <DefaultValue value="No One" />
+                <DefaultValue value="No one" />
                 <ValueConstraints>
-                    <RequiredValue operator="equal" value="No One" />
+                    <RequiredValue operator="equal" value="No one" />
                 </ValueConstraints>
+                <Implementation>
+                    <Secedit section="Privilege Rights">
+                        <TemplateSetting>SeTrustedCredManAccessPrivilege = %Value%</TemplateSetting>
+                    </Secedit>
+                </Implementation>
             </Policy>
             <Policy
                 id="2.2.2"
@@ -199,6 +228,11 @@
                 <ValueConstraints>
                     <RequiredValue operator="equal" value="Administrators, Remote Desktop Users" />
                 </ValueConstraints>
+				<Implementation>
+					<Secedit section="Privilege Rights">
+                        <TemplateSetting>SeNetworkLogonRight = %Value%</TemplateSetting>
+                    </Secedit>
+                </Implementation>
             </Policy>
             <Policy
                 id="2.2.3"
@@ -210,6 +244,11 @@
                 <ValueConstraints>
                     <RequiredValue operator="equal" value="No One" />
                 </ValueConstraints>
+				<Implementation>
+					<Secedit section="Privilege Rights">
+                        <TemplateSetting>SeTcbPrivilege = %Value%</TemplateSetting>
+                    </Secedit>
+                </Implementation>
             </Policy>
             <Policy
                 id="2.2.4"

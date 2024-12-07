@@ -1,11 +1,10 @@
-﻿using System.Collections.Generic;
+﻿// D:\SIH\Learning\Techolics_\Models\Models.cs
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
 
 namespace Techolics_
 {
-    // Data classes
-
     [XmlRoot("CIS_Benchmark")]
     public class CISBenchmark
     {
@@ -108,6 +107,9 @@ namespace Techolics_
 
     public class SeceditImplementation
     {
+        [XmlAttribute("section")]
+        public string Section { get; set; } = "";
+
         [XmlElement("TemplateSetting")]
         public string TemplateSetting { get; set; } = "";
     }
@@ -239,7 +241,6 @@ namespace Techolics_
         public string Text { get; set; } = "";
     }
 
-    // Item class to represent data for the DataGrid
     public class Item : INotifyPropertyChanged
     {
         private bool _isSelected;
@@ -368,7 +369,6 @@ namespace Techolics_
             }
         }
 
-        // Implement INotifyPropertyChanged
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected void OnPropertyChanged(string propertyName)

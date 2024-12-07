@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using Techolics_.Logging;
 
 namespace Techolics_.PolicyManagement
@@ -13,39 +11,39 @@ namespace Techolics_.PolicyManagement
 
         public SeceditManager(PolicyExplorerWindow policyExplorer)
         {
+            Logger.Instance.WriteLog("SeceditManager initialized.");
             this.policyExplorer = policyExplorer;
         }
 
         public string? GetCurrentPolicyValue(Policy policy)
         {
-            if (policy.Implementation?.Secedit == null || string.IsNullOrEmpty(policy.Implementation.Secedit.TemplateSetting))
+            if (
+                policy.Implementation?.Secedit == null
+                || string.IsNullOrEmpty(policy.Implementation.Secedit.TemplateSetting)
+            )
             {
-                Logger.Instance.WriteLog($"Policy {policy.Id} has no secedit implementation or template setting.");
+                Logger.Instance.WriteLog($"No secedit template setting for policy {policy.Id}.");
                 return null;
             }
 
             string templateSetting = policy.Implementation.Secedit.TemplateSetting;
-
-            // Check if secedit.exe exists
             string seceditPath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.System),
                 "secedit.exe"
             );
             if (!File.Exists(seceditPath))
             {
-                Logger.Instance.WriteLog("Error executing secedit: secedit.exe not found.");
+                Logger.Instance.WriteLog("secedit.exe not found.");
                 return null;
             }
 
-            // Use secedit to export the security settings to a file
             string tempFile = Path.GetTempFileName();
             try
             {
-                // Execute secedit command
                 var startInfo = new ProcessStartInfo
                 {
                     FileName = seceditPath,
-                    Arguments = $"/export /cfg \"{tempFile}\" /areas SECURITYPOLICY",
+                    Arguments = $"/export /cfg \"{tempFile}\" /areas SECURITYPOLICY USER_RIGHTS",
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -56,26 +54,20 @@ namespace Techolics_.PolicyManagement
                 {
                     if (process == null)
                     {
-                        Logger.Instance.WriteLog("Error executing secedit: Process could not be started.");
+                        Logger.Instance.WriteLog("Failed to start secedit process.");
                         return null;
                     }
 
                     process.WaitForExit();
-
-                    string error = process.StandardError.ReadToEnd();
-
                     if (process.ExitCode != 0)
                     {
-                        // Log the error details
-                        Logger.Instance.WriteLog($"Error executing secedit: {error.Trim()}");
+                        string error = process.StandardError.ReadToEnd().Trim();
+                        Logger.Instance.WriteLog($"secedit export error: {error}");
                         return null;
                     }
                 }
 
-                // Read the exported security settings
                 var lines = File.ReadAllLines(tempFile);
-
-                // Find the setting for the policy
                 var settingName = templateSetting.Split('=')[0].Trim();
 
                 foreach (var line in lines)
@@ -86,126 +78,120 @@ namespace Techolics_.PolicyManagement
                         if (parts.Length == 2)
                         {
                             string rawValue = parts[1].Trim();
-                            string displayValue = PolicyValueConverter.ConvertForDisplay(rawValue, policy.ValueType);
-                            return displayValue;
+                            return PolicyValueConverter.ConvertForDisplay(
+                                rawValue,
+                                policy.ValueType
+                            );
                         }
                     }
                 }
 
-                // Setting not found
+                // If not found and default is "No one", return "No one"
+                if (
+                    string.Equals(
+                        policy.DefaultValue?.Value,
+                        "No one",
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
+                {
+                    return "No one";
+                }
+
                 return "Not Configured";
             }
             catch (Exception ex)
             {
-                Logger.Instance.WriteLog($"Error executing secedit: {ex.Message}");
+                Logger.Instance.WriteLog($"Error in GetCurrentPolicyValue: {ex.Message}");
                 return null;
             }
             finally
             {
-                // Clean up temporary file
                 if (File.Exists(tempFile))
                 {
                     try
                     {
                         File.Delete(tempFile);
                     }
-                    catch
-                    {
-                        // Ignore any errors during cleanup
-                    }
+                    catch { }
                 }
             }
         }
 
         public bool ConfigurePolicy(Policy policy, bool isRevert = false)
         {
-            if (policy.Implementation?.Secedit == null || string.IsNullOrEmpty(policy.Implementation.Secedit.TemplateSetting))
+            if (
+                policy.Implementation?.Secedit == null
+                || string.IsNullOrEmpty(policy.Implementation.Secedit.TemplateSetting)
+            )
             {
-                Logger.Instance.WriteLog($"Policy {policy.Id} has no secedit implementation or template setting.");
+                Logger.Instance.WriteLog($"No secedit template for policy {policy.Id}.");
                 return false;
             }
 
             string templateSetting = policy.Implementation.Secedit.TemplateSetting;
+            string section = policy.Implementation.Secedit.Section;
+            if (string.IsNullOrEmpty(section))
+                section = "System Access";
+            if (section.Equals("Priviledge Rights", StringComparison.OrdinalIgnoreCase))
+                section = "Privilege Rights";
 
-            // Replace %Value% with the required value or default value
-            string? value = null;
-            if (isRevert)
+            string? value = isRevert ? GetPolicyDefaultValue(policy) : GetRequiredValue(policy);
+            if (value == null)
             {
-                // Get default value
-                value = GetPolicyDefaultValue(policy);
-                if (value == null)
-                {
-                    Logger.Instance.WriteLog($"No default value for policy {policy.Id}");
-                    return false;
-                }
-            }
-            else
-            {
-                // Get required value
-                if (policy.ValueConstraints?.RequiredValues != null)
-                {
-                    var requiredValue = policy.ValueConstraints.RequiredValues.FirstOrDefault();
-                    if (requiredValue != null)
-                    {
-                        value = requiredValue.Value;
-                    }
-                    else
-                    {
-                        Logger.Instance.WriteLog($"No required value for policy {policy.Id}");
-                        return false;
-                    }
-                }
-                else
-                {
-                    Logger.Instance.WriteLog($"No value constraints for policy {policy.Id}");
-                    return false;
-                }
+                Logger.Instance.WriteLog($"No suitable value found for policy {policy.Id}.");
+                return false;
             }
 
             try
             {
-                // Convert value for configuration
-                string convertedValue = PolicyValueConverter.ConvertForConfiguration(value, policy.ValueType);
+                string convertedValue = PolicyValueConverter.ConvertForConfiguration(
+                    value,
+                    policy.ValueType
+                );
                 templateSetting = templateSetting.Replace("%Value%", convertedValue);
 
-                // Create a temporary security template file
                 string tempTemplateFile = Path.GetTempFileName();
-
                 try
                 {
-                    // Build the security template content
-                    List<string> templateLines = new List<string>
+                    var templateLines = new System.Collections.Generic.List<string>
                     {
                         "[Unicode]",
                         "Unicode=yes",
                         "[Version]",
                         "signature=\"$CHICAGO$\"",
                         "Revision=1",
-                        "[System Access]",
-                        templateSetting
                     };
 
-                    // Write the template file
+                    if (section.Equals("Privilege Rights", StringComparison.OrdinalIgnoreCase))
+                    {
+                        templateLines.Add("[Privilege Rights]");
+                        templateLines.Add(templateSetting);
+                    }
+                    else
+                    {
+                        templateLines.Add("[System Access]");
+                        templateLines.Add(templateSetting);
+                    }
+
                     File.WriteAllLines(tempTemplateFile, templateLines);
 
-                    // Apply the template using secedit
                     string seceditPath = Path.Combine(
                         Environment.GetFolderPath(Environment.SpecialFolder.System),
                         "secedit.exe"
                     );
                     if (!File.Exists(seceditPath))
                     {
-                        Logger.Instance.WriteLog("Error: secedit.exe not found.");
+                        Logger.Instance.WriteLog("secedit.exe not found.");
                         return false;
                     }
 
-                    // Apply the template
                     string logFile = Path.GetTempFileName();
-
                     var startInfo = new ProcessStartInfo
                     {
                         FileName = seceditPath,
-                        Arguments = $"/configure /db \"{tempTemplateFile}.sdb\" /cfg \"{tempTemplateFile}\" /log \"{logFile}\" /quiet",
+                        Arguments =
+                            $"/configure /db \"{tempTemplateFile}.sdb\" /cfg \"{tempTemplateFile}\" /log \"{logFile}\" /quiet",
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
@@ -216,64 +202,55 @@ namespace Techolics_.PolicyManagement
                     {
                         if (process == null)
                         {
-                            Logger.Instance.WriteLog("Error executing secedit: Process could not be started.");
+                            Logger.Instance.WriteLog("Failed to start secedit configure process.");
                             return false;
                         }
 
                         process.WaitForExit();
-
-                        string error = process.StandardError.ReadToEnd();
-
                         if (process.ExitCode != 0)
                         {
-                            // Log the error details
-                            Logger.Instance.WriteLog($"Error executing secedit: {error.Trim()}");
+                            string error = process.StandardError.ReadToEnd().Trim();
+                            Logger.Instance.WriteLog($"secedit configure error: {error}");
                             return false;
                         }
-                        else
-                        {
-                            Logger.Instance.WriteLog($"Configuration applied successfully using secedit for policy {policy.Id}.");
-                            return true;
-                        }
+
+                        Logger.Instance.WriteLog($"Policy {policy.Id} configured successfully.");
+                        return true;
                     }
                 }
                 finally
                 {
-                    // Clean up temporary files
-                    string tempSdbFile = $"{Path.GetTempPath()}{Path.GetFileName(tempTemplateFile)}.sdb";
-                    if (File.Exists(tempTemplateFile))
-                    {
-                        try
-                        {
-                            File.Delete(tempTemplateFile);
-                        }
-                        catch
-                        {
-                            // Ignore errors during cleanup
-                        }
-                    }
-                    if (File.Exists(tempSdbFile))
-                    {
-                        try
-                        {
-                            File.Delete(tempSdbFile);
-                        }
-                        catch
-                        {
-                            // Ignore errors during cleanup
-                        }
-                    }
+                    CleanUpTempFiles(tempTemplateFile);
                 }
-            }
-            catch (ArgumentException ex)
-            {
-                Logger.Instance.WriteLog($"Value conversion error for policy {policy.Id}: {ex.Message}");
-                return false;
             }
             catch (Exception ex)
             {
-                Logger.Instance.WriteLog($"Error configuring policy {policy.Id} using secedit: {ex.Message}");
+                Logger.Instance.WriteLog($"Error configuring policy {policy.Id}: {ex.Message}");
                 return false;
+            }
+        }
+
+        private void CleanUpTempFiles(string tempTemplateFile)
+        {
+            string tempSdbFile = Path.Combine(
+                Path.GetTempPath(),
+                Path.GetFileName(tempTemplateFile) + ".sdb"
+            );
+            if (File.Exists(tempTemplateFile))
+            {
+                try
+                {
+                    File.Delete(tempTemplateFile);
+                }
+                catch { }
+            }
+            if (File.Exists(tempSdbFile))
+            {
+                try
+                {
+                    File.Delete(tempSdbFile);
+                }
+                catch { }
             }
         }
 
@@ -283,21 +260,27 @@ namespace Techolics_.PolicyManagement
             {
                 if (!string.IsNullOrEmpty(policy.DefaultValue.Value))
                 {
-                    // Global default value
                     return policy.DefaultValue.Value;
                 }
                 else
                 {
-                    // Domain or Standalone default values
                     bool isStandalone = IsStandalone();
-                    if (isStandalone)
-                    {
-                        return policy.DefaultValue.Standalone;
-                    }
-                    else
-                    {
-                        return policy.DefaultValue.Domain;
-                    }
+                    return isStandalone
+                        ? policy.DefaultValue.Standalone
+                        : policy.DefaultValue.Domain;
+                }
+            }
+            return null;
+        }
+
+        private string? GetRequiredValue(Policy policy)
+        {
+            if (policy.ValueConstraints?.RequiredValues != null)
+            {
+                var requiredValue = policy.ValueConstraints.RequiredValues.FirstOrDefault();
+                if (requiredValue != null)
+                {
+                    return requiredValue.Value;
                 }
             }
             return null;
