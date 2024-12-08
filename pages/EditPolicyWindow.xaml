@@ -1,0 +1,150 @@
+﻿<Window
+    x:Class="Techolics_.Pages.EditPolicyWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Edit Policy"
+    Width="600"
+    Height="400"
+    WindowStartupLocation="CenterOwner">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <!--  Policy Name  -->
+            <RowDefinition Height="Auto" />
+            <!--  Default Value  -->
+            <RowDefinition Height="Auto" />
+            <!--  CIS Recommended Values  -->
+            <RowDefinition Height="*" />
+            <!--  Input based on ValueType  -->
+            <RowDefinition Height="Auto" />
+            <!--  Buttons  -->
+        </Grid.RowDefinitions>
+
+        <!--  Policy Name (Read-only)  -->
+        <StackPanel
+            Grid.Row="0"
+            Margin="0,0,0,10"
+            Orientation="Horizontal">
+            <TextBlock
+                Width="120"
+                VerticalAlignment="Center"
+                Text="Policy Name:" />
+            <TextBlock
+                x:Name="PolicyNameTextBlock"
+                VerticalAlignment="Center"
+                FontWeight="Bold" />
+        </StackPanel>
+
+        <!--  Default Value  -->
+        <StackPanel
+            Grid.Row="1"
+            Margin="0,0,0,10"
+            Orientation="Horizontal">
+            <TextBlock
+                Width="120"
+                VerticalAlignment="Center"
+                Text="Default Value:" />
+            <TextBlock x:Name="DefaultValueTextBlock" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!--  CIS Recommended Value  -->
+        <StackPanel
+            Grid.Row="2"
+            Margin="0,0,0,10"
+            Orientation="Horizontal">
+            <TextBlock
+                Width="120"
+                VerticalAlignment="Center"
+                Text="CIS Recommended:" />
+            <TextBlock x:Name="CISRecommendedTextBlock" VerticalAlignment="Center" />
+        </StackPanel>
+
+        <!--  Dynamic Input Area  -->
+        <Grid Grid.Row="3">
+            <!--  We'll use a Grid with multiple child controls and show/hide them depending on ValueType  -->
+            <Grid x:Name="IntegerPanel" Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock
+                        Width="120"
+                        VerticalAlignment="Center"
+                        Text="Enter Integer Value:" />
+                    <TextBox x:Name="IntegerTextBox" Width="100" />
+                </StackPanel>
+            </Grid>
+
+            <Grid x:Name="BooleanPanel" Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock
+                        Width="120"
+                        VerticalAlignment="Center"
+                        Text="Select Boolean Value:" />
+                    <RadioButton
+                        x:Name="BooleanEnabledRadio"
+                        Margin="10,0,10,0"
+                        Content="Enabled" />
+                    <RadioButton x:Name="BooleanDisabledRadio" Content="Disabled" />
+                </StackPanel>
+            </Grid>
+
+            <Grid x:Name="StringPanel" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!--  Left List (Available Users)  -->
+                <ListBox
+                    x:Name="AvailableUsersListBox"
+                    Grid.Column="0"
+                    SelectionMode="Extended" />
+
+                <!--  Buttons  -->
+                <StackPanel
+                    Grid.Column="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Orientation="Vertical">
+                    <Button
+                        x:Name="AddUserButton"
+                        Width="50"
+                        Margin="0,5"
+                        Click="AddUserButton_Click"
+                        Content="right" />
+                    <Button
+                        x:Name="RemoveUserButton"
+                        Width="50"
+                        Margin="0,5"
+                        Click="RemoveUserButton_Click"
+                        Content="left" />
+                </StackPanel>
+
+                <!--  Right List (Selected Users)  -->
+                <ListBox
+                    x:Name="SelectedUsersListBox"
+                    Grid.Column="2"
+                    SelectionMode="Extended" />
+            </Grid>
+        </Grid>
+
+        <!--  Buttons  -->
+        <StackPanel
+            Grid.Row="4"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal">
+            <Button
+                x:Name="ApplyButton"
+                Width="80"
+                Margin="5"
+                Click="ApplyButton_Click"
+                Content="Apply" />
+            <Button
+                x:Name="CancelButton"
+                Width="80"
+                Margin="5"
+                Click="CancelButton_Click"
+                Content="Cancel" />
+        </StackPanel>
+
+    </Grid>
+</Window>

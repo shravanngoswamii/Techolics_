@@ -158,5 +158,11 @@ namespace Techolics_.PolicyManagement
 
             return string.Join(", ", parts);
         }
+        public static List<string> GetAllFriendlyNames()
+        {
+            // Return all keys from SidMappings
+            return SidMappings.Keys.ToList();
+        }
+
     }
 }

@@ -38,8 +38,6 @@ namespace Techolics_
 
             // Hook up event handlers
             policyTreeView.SelectedItemChanged += logic.PolicyTreeView_SelectedItemChanged;
-            // Remove DataGrid's SelectionChanged if it's handled via IsSelected bindings
-            // myDataGrid.SelectionChanged += logic.MyDataGrid_SelectionChanged;
 
             // Control button visibility based on operation
             if (operation == "Audit")
@@ -72,18 +70,15 @@ namespace Techolics_
             try
             {
                 string logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
-                string logFileName = "Techolics_Log.txt"; // Use the same name as in Logger.cs
+                string logFileName = "Techolics_Log.txt";
                 string logFilePath = Path.Combine(logDirectory, logFileName);
 
                 if (File.Exists(logFilePath))
                 {
                     string[] allLines = File.ReadAllLines(logFilePath);
-
-                    // Clean and format the logs
                     var formattedLines = new List<string>();
                     foreach (var line in allLines)
                     {
-                        // Example of cleaning: Remove file paths and line numbers
                         string cleanedLine = CleanLogLine(line);
                         formattedLines.Add(cleanedLine);
                     }
@@ -104,20 +99,16 @@ namespace Techolics_
 
         private string CleanLogLine(string logLine)
         {
-            // Remove file path, member name, and line number for readability
             int fileIndex = logLine.IndexOf("| File:");
             if (fileIndex >= 0)
             {
                 logLine = logLine.Substring(0, fileIndex).Trim();
             }
-
-            // Optionally, format the log line further if needed
             return logLine;
         }
 
         private void Window_Closed(object? sender, EventArgs e)
         {
-            // Stop the timer when the window is closed
             logRefreshTimer.Stop();
         }
 
@@ -126,12 +117,7 @@ namespace Techolics_
             var selectedItems = logic.GetSelectedItems();
             if (selectedItems.Count == 0)
             {
-                MessageBox.Show(
-                    "Please select at least one policy.",
-                    "No Policy Selected",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning
-                );
+                MessageBox.Show("Please select at least one policy.", "No Policy Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             logic.StartAudit(selectedItems);
@@ -142,15 +128,11 @@ namespace Techolics_
             var selectedItems = logic.GetSelectedItems();
             if (selectedItems.Count == 0)
             {
-                MessageBox.Show(
-                    "Please select at least one policy.",
-                    "No Policy Selected",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning
-                );
+                MessageBox.Show("Please select at least one policy.", "No Policy Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            logic.StartConfig(selectedItems);
+            // Pass fromEditWindow: false
+            logic.StartConfig(selectedItems, fromEditWindow: false);
         }
 
         private void RevertButton_Click(object sender, RoutedEventArgs e)
@@ -158,12 +140,7 @@ namespace Techolics_
             var selectedItems = logic.GetSelectedItems();
             if (selectedItems.Count == 0)
             {
-                MessageBox.Show(
-                    "Please select at least one policy to revert.",
-                    "No Policy Selected",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning
-                );
+                MessageBox.Show("Please select at least one policy to revert.", "No Policy Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             logic.StartRevert(selectedItems);
@@ -178,11 +155,6 @@ namespace Techolics_
                 {
                     item.IsSelected = newValue;
                 }
-
-                // Optionally, update the selection in the DataGrid
-                // This is handled by bindings, so no need to call Items.Refresh()
-
-                // Optionally, log the action
                 Logger.Instance.WriteLog($"Select All clicked. New value: {newValue}");
             }
             catch (Exception ex)
@@ -197,12 +169,7 @@ namespace Techolics_
             var allItems = logic.GetAllItems();
             if (allItems.Count == 0)
             {
-                MessageBox.Show(
-                    "No policies available to audit.",
-                    "No Policies",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning
-                );
+                MessageBox.Show("No policies available to audit.", "No Policies", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             logic.StartAudit(allItems);
@@ -213,21 +180,40 @@ namespace Techolics_
             var allItems = logic.GetAllItems();
             if (allItems.Count == 0)
             {
-                MessageBox.Show(
-                    "No policies available for configuration.",
-                    "No Policies",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning
-                );
+                MessageBox.Show("No policies available for configuration.", "No Policies", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
-            logic.StartConfig(allItems);
+            // Pass fromEditWindow: false
+            logic.StartConfig(allItems, fromEditWindow: false);
         }
 
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
-            // Implement edit functionality if needed
-            MessageBox.Show("Edit functionality is not implemented yet.");
+            var selectedItems = logic.GetSelectedItems();
+
+            if (selectedItems.Count == 0)
+            {
+                MessageBox.Show("Please select a policy to edit.", "No Policy Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (selectedItems.Count > 1)
+            {
+                MessageBox.Show("Please select only one policy at a time to edit.", "Multiple Policies Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var selectedItem = selectedItems[0];
+
+            // Pass 'this' as the PolicyExplorerWindow reference
+            var editWindow = new Techolics_.Pages.EditPolicyWindow(this, selectedItem, logic.GetBenchmarkValues(), logic.GetBenchmarkDocumentation());
+            editWindow.Owner = this;
+            bool? result = editWindow.ShowDialog();
+
+            if (result == true)
+            {
+                myDataGrid.Items.Refresh();
+            }
         }
 
         private void ExitMenuItem_Click(object sender, RoutedEventArgs e)

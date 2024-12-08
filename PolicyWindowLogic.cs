@@ -11,6 +11,9 @@ namespace Techolics_
 {
     public class PolicyWindowLogic
     {
+        public CISBenchmark GetBenchmarkValues() => benchmarkValues;
+        public CISBenchmarkDocumentation GetBenchmarkDocumentation() => benchmarkDocumentation;
+
         private CISBenchmark benchmarkValues;
         private CISBenchmarkDocumentation benchmarkDocumentation;
         private PolicyExplorerWindow policyExplorer;
@@ -534,6 +537,9 @@ namespace Techolics_
             return policyExplorer.Items.Where(item => item.IsSelected).ToList();
         }
 
+        /// <summary>
+        /// Starts the audit process on selected items.
+        /// </summary>
         public void StartAudit(List<Item> selectedItems)
         {
             var auditor = new PolicyAuditor(
@@ -544,16 +550,23 @@ namespace Techolics_
             auditor.AuditPolicies(selectedItems);
         }
 
-        public void StartConfig(List<Item> selectedItems)
+        /// <summary>
+        /// Starts the configuration process on selected items.
+        /// </summary>
+        /// <param name="fromEditWindow">Indicates if the configuration is initiated from the Edit Policy window.</param>
+        public void StartConfig(List<Item> selectedItems, bool fromEditWindow = false)
         {
             var configurator = new PolicyConfigurator(
                 policyExplorer,
                 benchmarkValues,
                 benchmarkDocumentation
             );
-            configurator.ConfigurePolicies(selectedItems);
+            configurator.ConfigurePolicies(selectedItems, isRevert: false, fromEditWindow: fromEditWindow);
         }
 
+        /// <summary>
+        /// Starts the revert process on selected items.
+        /// </summary>
         public void StartRevert(List<Item> selectedItems)
         {
             var configurator = new PolicyConfigurator(
@@ -561,7 +574,7 @@ namespace Techolics_
                 benchmarkValues,
                 benchmarkDocumentation
             );
-            configurator.ConfigurePolicies(selectedItems, isRevert: true);
+            configurator.ConfigurePolicies(selectedItems, isRevert: true, fromEditWindow: false);
         }
     }
 }
