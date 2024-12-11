@@ -1,7 +1,8 @@
-﻿<Window
+﻿<ui:FluentWindow
     x:Class="Techolics_.Pages.EditPolicyWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     Title="Edit Policy"
     Width="600"
     Height="400"
@@ -63,14 +64,20 @@
         <Grid Grid.Row="3">
             <!--  We'll use a Grid with multiple child controls and show/hide them depending on ValueType  -->
             <Grid x:Name="IntegerPanel" Visibility="Collapsed">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock
-                        Width="120"
-                        VerticalAlignment="Center"
-                        Text="Enter Integer Value:" />
-                    <TextBox x:Name="IntegerTextBox" Width="100" />
-                </StackPanel>
-            </Grid>
+    <StackPanel Orientation="Horizontal" Margin="10">
+        <TextBlock
+            Width="150"
+            VerticalAlignment="Center"
+            Text="Enter Integer Value:"
+            Margin="0,0,10,0" />
+        <TextBox
+            x:Name="IntegerTextBox"
+            Width="100"
+            VerticalAlignment="Center"
+            HorizontalAlignment="Left" />
+    </StackPanel>
+</Grid>
+
 
             <Grid x:Name="BooleanPanel" Visibility="Collapsed">
                 <StackPanel Orientation="Horizontal">
@@ -147,4 +154,4 @@
         </StackPanel>
 
     </Grid>
-</Window>
+</ui:FluentWindow>

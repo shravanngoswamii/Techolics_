@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Techolics_.Logging;
 using Techolics_.PolicyManagement;
 
 namespace Techolics_
@@ -345,9 +346,16 @@ namespace Techolics_
         // Method to get the policy description
         private string GetPolicyDescription(string policyId)
         {
+            Logger.Instance.WriteLog($"Searching for documentation with Policy ID: {policyId}");
             var docPolicy = benchmarkDocumentation.Policies.FirstOrDefault(p => p.Id == policyId);
+            if (docPolicy == null)
+            {
+                Logger.Instance.WriteLog($"No documentation found for Policy ID: {policyId}");
+                return "No description available.";
+            }
             return docPolicy?.Documentation?.Description?.Text ?? "No description available.";
         }
+
 
         // Method to get the default value text for a policy
         private string GetDefaultValueText(Policy policy)

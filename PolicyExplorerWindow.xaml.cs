@@ -8,10 +8,12 @@ using System.Windows;
 using System.Windows.Threading;
 using Techolics_.Logging;
 using Techolics_.PolicyManagement;
-
+using Wpf.Ui.Appearance;
+using Wpf.Ui.Controls;
+using WpfMessageBox = Wpf.Ui.Controls.MessageBox;
 namespace Techolics_
 {
-    public partial class PolicyExplorerWindow : Window
+    public partial class PolicyExplorerWindow : FluentWindow
     {
         private PolicyWindowLogic logic;
         private List<string> selectedProfiles;
@@ -27,6 +29,15 @@ namespace Techolics_
         {
             InitializeComponent();
 
+            Loaded += (sender, args) =>
+            {
+                SystemThemeWatcher.Watch(
+                    this,                                    // Window instance
+                    WindowBackdropType.Mica,                // Background type
+                    true                                     // Automatically update accents
+                );
+            };
+
             this.selectedProfiles = selectedProfiles;
             this.operation = operation;
             this.Title = "Policy Explorer"; // Set the title
@@ -38,6 +49,7 @@ namespace Techolics_
 
             // Hook up event handlers
             policyTreeView.SelectedItemChanged += logic.PolicyTreeView_SelectedItemChanged;
+            myDataGrid.SelectionChanged += logic.MyDataGrid_SelectionChanged;
 
             // Control button visibility based on operation
             if (operation == "Audit")
@@ -112,41 +124,59 @@ namespace Techolics_
             logRefreshTimer.Stop();
         }
 
-        private void AuditButton_Click(object sender, RoutedEventArgs e)
+        private async void AuditButton_Click(object sender, RoutedEventArgs e)
         {
             var selectedItems = logic.GetSelectedItems();
             if (selectedItems.Count == 0)
             {
-                MessageBox.Show("Please select at least one policy.", "No Policy Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+                var messageBox = new WpfMessageBox
+                {
+                    Title = "No Profile Selected",
+                    Content = "Please select at least one policy.",
+                    CloseButtonText = "Close",
+                };
+                await messageBox.ShowDialogAsync();
                 return;
             }
             logic.StartAudit(selectedItems);
         }
 
-        private void ConfigButton_Click(object sender, RoutedEventArgs e)
+        private async void ConfigButton_Click(object sender, RoutedEventArgs e)
         {
             var selectedItems = logic.GetSelectedItems();
             if (selectedItems.Count == 0)
             {
-                MessageBox.Show("Please select at least one policy.", "No Policy Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+                var messageBox = new WpfMessageBox
+                {
+                    Title = "No Policy Selected",
+                    Content = "Please select at least one policy.",
+                    CloseButtonText = "Close",
+                };
+                await messageBox.ShowDialogAsync();
                 return;
             }
             // Pass fromEditWindow: false
             logic.StartConfig(selectedItems, fromEditWindow: false);
         }
 
-        private void RevertButton_Click(object sender, RoutedEventArgs e)
+        private async void RevertButton_Click(object sender, RoutedEventArgs e)
         {
             var selectedItems = logic.GetSelectedItems();
             if (selectedItems.Count == 0)
             {
-                MessageBox.Show("Please select at least one policy to revert.", "No Policy Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+                var messageBox = new WpfMessageBox
+                {
+                    Title = "No Profile Selected",
+                    Content = "Please select at least one policy to revert.",
+                    CloseButtonText = "Close",
+                };
+                await messageBox.ShowDialogAsync();
                 return;
             }
             logic.StartRevert(selectedItems);
         }
 
-        private void SelectAllCheckBox_Click(object sender, RoutedEventArgs e)
+        private async void SelectAllCheckBox_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -160,46 +190,77 @@ namespace Techolics_
             catch (Exception ex)
             {
                 Logger.Instance.WriteLog($"Error in SelectAllCheckBox_Click: {ex.Message}");
-                MessageBox.Show("An error occurred while selecting all policies.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                var messageBox = new WpfMessageBox
+                {
+                    Title = "Error",
+                    Content = "An error occurred while selecting all policies.",
+                    CloseButtonText = "OK",
+                };
+                await messageBox.ShowDialogAsync();
+                return;
             }
         }
 
-        private void AuditAllButton_Click(object sender, RoutedEventArgs e)
+        private async void AuditAllButton_Click(object sender, RoutedEventArgs e)
         {
             var allItems = logic.GetAllItems();
             if (allItems.Count == 0)
             {
-                MessageBox.Show("No policies available to audit.", "No Policies", MessageBoxButton.OK, MessageBoxImage.Warning);
+                var messageBox = new WpfMessageBox
+                {
+                    Title = "No Policies",
+                    Content = "No policies available to audit.",
+                    CloseButtonText = "Close",
+                };
+                await messageBox.ShowDialogAsync();
                 return;
             }
             logic.StartAudit(allItems);
         }
 
-        private void ConfigAllButton_Click(object sender, RoutedEventArgs e)
+        private async void ConfigAllButton_Click(object sender, RoutedEventArgs e)
         {
             var allItems = logic.GetAllItems();
             if (allItems.Count == 0)
             {
-                MessageBox.Show("No policies available for configuration.", "No Policies", MessageBoxButton.OK, MessageBoxImage.Warning);
+                var messageBox = new WpfMessageBox
+                {
+                    Title = "No Policies",
+                    Content = "No policies available for configuration.",
+                    CloseButtonText = "OK",
+                };
+                await messageBox.ShowDialogAsync();
                 return;
             }
             // Pass fromEditWindow: false
             logic.StartConfig(allItems, fromEditWindow: false);
         }
 
-        private void EditButton_Click(object sender, RoutedEventArgs e)
+        private async void EditButton_Click(object sender, RoutedEventArgs e)
         {
             var selectedItems = logic.GetSelectedItems();
 
             if (selectedItems.Count == 0)
             {
-                MessageBox.Show("Please select a policy to edit.", "No Policy Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+                var messageBox = new WpfMessageBox
+                {
+                    Title = "No Policy Selected",
+                    Content = "Please select a policy to edit.",
+                    CloseButtonText = "OK",
+                };
+                await messageBox.ShowDialogAsync();
                 return;
             }
 
             if (selectedItems.Count > 1)
             {
-                MessageBox.Show("Please select only one policy at a time to edit.", "Multiple Policies Selected", MessageBoxButton.OK, MessageBoxImage.Warning);
+                var messageBox = new WpfMessageBox
+                {
+                    Title = "Multiple Policies Selected",
+                    Content = "Please select only one policy at a time to edit.",
+                    CloseButtonText = "OK",
+                };
+                await messageBox.ShowDialogAsync();
                 return;
             }
 
@@ -219,6 +280,30 @@ namespace Techolics_
         private void ExitMenuItem_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
+        }
+
+        private void BackButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Implement back navigation logic here
+            try
+            {
+                // Show MainWindow
+                MainWindow mainWindow = new MainWindow();
+                mainWindow.Show();
+
+                // Close the current window
+                this.Close();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error navigating back: {ex.Message}");
+            }
+
+        }
+
+        private void myDataGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+
         }
     }
 }

@@ -11,10 +11,14 @@ using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using Techolics_.Logging;
+using Wpf.Ui.Controls;
+using Wpf.Ui.Appearance;
 
+using WpfMessageBox = Wpf.Ui.Controls.MessageBox;
+using Wpf.Ui.Extensions;
 namespace Techolics_
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : FluentWindow
     {
         private DispatcherTimer timer;
 
@@ -35,6 +39,24 @@ namespace Techolics_
         public MainWindow()
         {
             InitializeComponent();
+            Loaded += (sender, args) =>
+            {
+                SystemThemeWatcher.Watch(
+                    this,                                    // Window instance
+                    WindowBackdropType.Mica,                // Background type
+                    true                                     // Automatically update accents
+                );
+            };
+
+            // Clean up the watcher when the window is closing
+            Closing += (sender, args) =>
+            {
+                if (new System.Windows.Interop.WindowInteropHelper(this).Handle != IntPtr.Zero)
+                {
+                    SystemThemeWatcher.UnWatch(this);
+                }
+            };
+
 
             // Initialize ObservableCollections
             AvailableProfiles = new ObservableCollection<Profile>(AllProfiles);
@@ -71,6 +93,11 @@ namespace Techolics_
             // Initialize button states
             UpdateToggleButtons();
         }
+        private void MainWindow_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
+        {
+            // Unwatch the theme changes to clean up resources
+            SystemThemeWatcher.UnWatch(this as System.Windows.Window);
+        }
 
         private void Timer_Tick(object? sender, EventArgs e)
         {
@@ -96,7 +123,7 @@ namespace Techolics_
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error retrieving Windows version: " + ex.Message);
+                System.Windows.MessageBox.Show("Error retrieving Windows version: " + ex.Message);
             }
             return version;
         }
@@ -120,7 +147,7 @@ namespace Techolics_
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error retrieving Windows edition: " + ex.Message);
+                System.Windows.MessageBox.Show("Error retrieving Windows edition: " + ex.Message);
             }
             return edition;
         }
@@ -151,25 +178,39 @@ namespace Techolics_
             adminPrompt.ShowDialog();
         }
 
-        private void AuditButton_Click(object sender, RoutedEventArgs e)
+        private async void AuditButton_Click(object sender, RoutedEventArgs e)
         {
-            if (SelectedProfiles.Count == 0)
-            {
-                MessageBox.Show(
-                    "Please select at least one profile.",
-                    "No Profile Selected",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning
-                );
-                return;
-            }
-
             if (!IsUserAdministrator())
             {
                 AdminPromptWindow adminPrompt = new AdminPromptWindow();
+                SystemThemeWatcher.UnWatch(this as System.Windows.Window);
                 adminPrompt.ShowDialog();
                 return;
             }
+
+            if (SelectedProfiles.Count == 0)
+            {
+                var messageBox = new Wpf.Ui.Controls.MessageBox
+                {
+                    Title = "No Profile Selected",
+                    Content = "Please select at least one profile.",
+                    CloseButtonText = "Close",
+
+                };
+                await messageBox.ShowDialogAsync();
+
+
+                return;
+            }
+
+            //if (!IsUserAdministrator())
+            //{
+            //    AdminPromptWindow adminPrompt = new AdminPromptWindow();
+            //    SystemThemeWatcher.UnWatch(this as System.Windows.Window);
+            //    adminPrompt.ShowDialog();
+            //    return;
+            //}
+            SystemThemeWatcher.Watch(this as System.Windows.Window);
 
             PolicyExplorerWindow policyExplorerWindow = new PolicyExplorerWindow(
                 GetSelectedProfileNames(),
@@ -177,18 +218,21 @@ namespace Techolics_
             );
             policyExplorerWindow.Show();
             this.Close();
+
         }
 
-        private void ConfigButton_Click(object sender, RoutedEventArgs e)
+        private async void ConfigButton_Click(object sender, RoutedEventArgs e)
         {
             if (SelectedProfiles.Count == 0)
             {
-                MessageBox.Show(
-                    "Please select at least one profile.",
-                    "No Profile Selected",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning
-                );
+                var messageBox = new Wpf.Ui.Controls.MessageBox
+                {
+                    Title = "No Profile Selected",
+                    Content = "Please select at least one profile.",
+                    CloseButtonText = "Close",
+
+                };
+                await messageBox.ShowDialogAsync();
                 return;
             }
 
@@ -205,6 +249,7 @@ namespace Techolics_
             );
             policyExplorerWindow.Show();
             this.Close();
+
         }
 
         private List<string> GetSelectedProfileNames()
@@ -240,10 +285,10 @@ namespace Techolics_
             }
             else
             {
-                MessageBox.Show(
+                System.Windows.MessageBox.Show(
                     "Please select an item to add or remove.",
                     "No Selection",
-                    MessageBoxButton.OK,
+                    System.Windows.MessageBoxButton.OK,
                     MessageBoxImage.Information
                 );
             }
@@ -434,5 +479,6 @@ namespace Techolics_
                 Description = description;
             }
         }
+
     }
 }

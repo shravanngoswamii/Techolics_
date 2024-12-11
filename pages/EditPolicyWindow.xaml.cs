@@ -6,10 +6,12 @@ using Techolics_;
 using Techolics_.PolicyManagement;
 using Techolics_.Logging;
 using System.Collections.Generic;
-
+using Wpf.Ui.Appearance;
+using Wpf.Ui.Controls;
+using WpfMessageBox = Wpf.Ui.Controls.MessageBox;
 namespace Techolics_.Pages
 {
-    public partial class EditPolicyWindow : Window
+    public partial class EditPolicyWindow : FluentWindow
     {
         private Item _policyItem;
         private Policy _policy;
@@ -122,9 +124,9 @@ namespace Techolics_.Pages
             this.Close();
         }
 
-        private void ApplyButton_Click(object sender, RoutedEventArgs e)
+        private async void ApplyButton_Click(object sender, RoutedEventArgs e)
         {
-            string? newValue = GetNewValueFromControls();
+            string? newValue = await GetNewValueFromControls();
             if (newValue == null)
             {
                 return;
@@ -151,48 +153,57 @@ namespace Techolics_.Pages
             this.Close();
         }
 
-        private string? GetNewValueFromControls()
+
+        private async Task<string?> GetNewValueFromControls()
         {
             var type = _policy.ValueType;
+
             if (string.Equals(type, "Integer", StringComparison.OrdinalIgnoreCase))
             {
                 if (!int.TryParse(IntegerTextBox.Text.Trim(), out int val))
                 {
-                    MessageBox.Show("Please enter a valid integer value.", "Invalid Input", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    await ShowMessageBoxAsync("Invalid Input", "Please enter a valid integer value.");
                     return null;
                 }
                 return val.ToString();
             }
             else if (string.Equals(type, "Boolean", StringComparison.OrdinalIgnoreCase))
             {
+                // Return "Enabled" or "Disabled" based on the radio button state
                 return BooleanEnabledRadio.IsChecked == true ? "Enabled" : "Disabled";
             }
             else if (string.Equals(type, "String", StringComparison.OrdinalIgnoreCase))
             {
-                var selected = new List<string>();
-                foreach (var item in SelectedUsersListBox.Items)
-                {
-                    selected.Add(item.ToString()!);
-                }
-
-                if (selected.Count == 0)
-                {
-                    return "No one";
-                }
-
-                return string.Join(", ", selected);
+                return GetSelectedItemsAsString() ?? "No one";
             }
-            else
-            {
-                var selected = new List<string>();
-                foreach (var item in SelectedUsersListBox.Items)
-                {
-                    selected.Add(item.ToString()!);
-                }
 
-                return selected.Count == 0 ? "No one" : string.Join(", ", selected);
-            }
+            // Default case (fallback)
+            return GetSelectedItemsAsString() ?? "No one";
         }
+
+        // Helper method to retrieve selected items from a ListBox
+        private string? GetSelectedItemsAsString()
+        {
+            var selected = SelectedUsersListBox.Items.Cast<object>()
+                .Select(item => item.ToString())
+                .Where(item => !string.IsNullOrWhiteSpace(item))
+                .ToList();
+
+            return selected.Count > 0 ? string.Join(", ", selected) : null;
+        }
+
+        // Helper method to show a message box
+        private async Task ShowMessageBoxAsync(string title, string content)
+        {
+            var messageBox = new WpfMessageBox
+            {
+                Title = title,
+                Content = content,
+                CloseButtonText = "OK",
+            };
+            await messageBox.ShowDialogAsync();
+        }
+
 
         private void AddUserButton_Click(object sender, RoutedEventArgs e)
         {
