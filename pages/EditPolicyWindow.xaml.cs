@@ -3,12 +3,12 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using Techolics_;
-using Techolics_.PolicyManagement;
 using Techolics_.Logging;
 using System.Collections.Generic;
-using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 using WpfMessageBox = Wpf.Ui.Controls.MessageBox;
+using Techolics_.PolicyManagement;
+
 namespace Techolics_.Pages
 {
     public partial class EditPolicyWindow : FluentWindow
@@ -132,22 +132,20 @@ namespace Techolics_.Pages
                 return;
             }
 
-            // Store user's chosen value in Current
-            _policyItem.Current = newValue;
+            // Store user's chosen value in CustomValue
+            _policyItem.CustomValue = newValue;
 
-            var configurator = new PolicyConfigurator(_policyExplorerWindow, _benchmarkValues, _benchmarkDocumentation);
-            try
-            {
-                // Configure using the user-provided value in item.Current
-                configurator.ConfigurePolicies(new List<Item> { _policyItem }, isRevert: false, fromEditWindow: true);
-            }
-            catch (Exception ex)
-            {
-                Logger.Instance.WriteLog($"Error configuring policy {_policyItem.ID}: {ex.Message}");
-            }
+            // Update UI to reflect the change
+            _policyExplorerWindow.myDataGrid.Items.Refresh();
 
-            var auditor = new PolicyAuditor(_policyExplorerWindow, _benchmarkValues, _benchmarkDocumentation);
-            auditor.AuditPolicies(new List<Item> { _policyItem });
+            // Provide feedback to the user
+            var successMessageBox = new WpfMessageBox
+            {
+                Title = "Success",
+                Content = "Custom value set for the policy. It will be used when generating GPOs.",
+                CloseButtonText = "OK",
+            };
+            await successMessageBox.ShowDialogAsync();
 
             DialogResult = true;
             this.Close();
@@ -165,6 +163,31 @@ namespace Techolics_.Pages
                     await ShowMessageBoxAsync("Invalid Input", "Please enter a valid integer value.");
                     return null;
                 }
+
+                // Additional range validation based on ValueConstraints
+                var requiredValues = _policy.ValueConstraints?.RequiredValues;
+                if (requiredValues != null)
+                {
+                    foreach (var req in requiredValues)
+                    {
+                        if (req.Operator == "greater_or_equal" && val < int.Parse(req.Value))
+                        {
+                            await ShowMessageBoxAsync("Invalid Value", $"Value must be greater or equal to {req.Value}.");
+                            return null;
+                        }
+                        if (req.Operator == "less_or_equal" && val > int.Parse(req.Value))
+                        {
+                            await ShowMessageBoxAsync("Invalid Value", $"Value must be less or equal to {req.Value}.");
+                            return null;
+                        }
+                        if (req.Operator == "not_equal" && val == int.Parse(req.Value))
+                        {
+                            await ShowMessageBoxAsync("Invalid Value", $"Value must not be equal to {req.Value}.");
+                            return null;
+                        }
+                    }
+                }
+
                 return val.ToString();
             }
             else if (string.Equals(type, "Boolean", StringComparison.OrdinalIgnoreCase))

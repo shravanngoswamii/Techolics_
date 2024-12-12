@@ -369,6 +369,21 @@ namespace Techolics_
             }
         }
 
+        // New Property for Custom Value
+        private string _customValue = "";
+        public string CustomValue
+        {
+            get => _customValue;
+            set
+            {
+                if (_customValue != value)
+                {
+                    _customValue = value;
+                    OnPropertyChanged(nameof(CustomValue));
+                }
+            }
+        }
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected void OnPropertyChanged(string propertyName)

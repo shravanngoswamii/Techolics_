@@ -3,8 +3,10 @@ using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using System.Xml.Linq;
@@ -13,6 +15,7 @@ using Techolics_.PolicyManagement;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 using WpfMessageBox = Wpf.Ui.Controls.MessageBox;
+
 namespace Techolics_
 {
     public partial class PolicyExplorerWindow : FluentWindow
@@ -300,8 +303,8 @@ namespace Techolics_
             {
                 Console.WriteLine($"Error navigating back: {ex.Message}");
             }
-
         }
+
         private async void CreateGPOButton_Click(object sender, RoutedEventArgs e)
         {
             // Prompt user for GPO name
@@ -348,7 +351,7 @@ namespace Techolics_
             var selectedItems = logic.GetSelectedItems();
             if (selectedItems == null || selectedItems.Count == 0)
             {
-                var noPoliciesMsg = new Wpf.Ui.Controls.MessageBox
+                var noPoliciesMsg = new WpfMessageBox
                 {
                     Title = "No Policies Selected",
                     Content = "Please select at least one policy before creating a GPO.",
@@ -370,7 +373,9 @@ namespace Techolics_
                 "Revision=1"
             };
 
-            var registryEntries = new List<string> { "COMPUTER" };
+            // No section header for registry policies
+            // Each registry policy starts with "Computer"
+            var registryEntries = new List<string>();
 
             foreach (var item in selectedItems)
             {
@@ -401,10 +406,13 @@ namespace Techolics_
                     (string? hiveName, string? subKeyPath) = ParseRegistryKey(regImpl.Key);
                     if (!string.IsNullOrEmpty(subKeyPath))
                     {
-                        registryEntries.Add(subKeyPath);
-                        string lgpoValueLine = GetLGPORegistryValueLine(regImpl.ValueName, convertedValue, p.ValueType);
-                        registryEntries.Add(lgpoValueLine);
-                        registryEntries.Add(""); // blank line to separate keys
+                        // Each registry policy starts with "Computer"
+                        registryEntries.Add("Computer");
+                        registryEntries.Add(regImpl.Key);
+                        registryEntries.Add(regImpl.ValueName);
+                        registryEntries.Add($"{regImpl.ValueType}:{convertedValue}");
+
+                        Logger.Instance.WriteLog($"Added Registry Policy:\nComputer\n{regImpl.Key}\n{regImpl.ValueName}\n{regImpl.ValueType}:{convertedValue}");
                     }
                 }
             }
@@ -415,39 +423,111 @@ namespace Techolics_
                 string seceditPath = Path.Combine(machinePath, "Microsoft", "Windows NT", "SecEdit");
                 string infPath = Path.Combine(seceditPath, "GptTmpl.inf");
                 File.WriteAllLines(infPath, seceditLines);
+                Logger.Instance.WriteLog($"Secedit policies written to {infPath}");
             }
 
             // If we have registry policies, run LGPO to create Registry.pol
             if (hasRegistryPolicies)
             {
-                string tempLgpoFile = Path.GetTempFileName();
+                // Create the LGPO text file in the correct format
+                string tempLgpoFile = Path.Combine(Path.GetTempPath(), $"tmp_{Guid.NewGuid()}.txt"); // Use .txt extension as per user example
                 File.WriteAllLines(tempLgpoFile, registryEntries);
+                Logger.Instance.WriteLog($"Registry policies written to temporary LGPO file: {tempLgpoFile}");
 
-                // Adjust LGPO.exe path as necessary
-                string lgpoExePath = "LGPO.exe";
+                // Define the path to LGPO.exe
+                string lgpoExePath = @"C:\Users\shrav\Downloads\LGPO_30\LGPO.exe"; // Update this path as needed
+
                 if (!File.Exists(lgpoExePath))
                 {
                     Logger.Instance.WriteLog("LGPO.exe not found. Please ensure it is available.");
+                    var errorBox = new WpfMessageBox
+                    {
+                        Title = "LGPO.exe Not Found",
+                        Content = "LGPO.exe was not found at the specified path. Please ensure LGPO.exe is available.",
+                        CloseButtonText = "OK"
+                    };
+                    await errorBox.ShowDialogAsync();
                 }
                 else
                 {
-                    var startInfo = new System.Diagnostics.ProcessStartInfo
+                    // Define the path where Registry.pol should be placed within the GPO folder
+                    string registryPolPath = Path.Combine(machinePath, "Microsoft", "Windows", "Group Policy", "Machine");
+                    Directory.CreateDirectory(registryPolPath); // Ensure the directory exists
+
+                    string registryPolFilePath = Path.Combine(registryPolPath, "Registry.pol");
+
+                    var startInfo = new ProcessStartInfo
                     {
                         FileName = lgpoExePath,
-                        Arguments = $"/parse /m \"{tempLgpoFile}\" /path \"{gpoFolderPath}\"",
+                        Arguments = $"/r \"{tempLgpoFile}\" /w \"{registryPolFilePath}\"",
                         UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
                         CreateNoWindow = true
                     };
 
-                    using (var proc = System.Diagnostics.Process.Start(startInfo))
+                    using (var proc = new Process { StartInfo = startInfo })
                     {
-                        proc?.WaitForExit();
-                    }
-                }
+                        try
+                        {
+                            proc.Start();
 
-                if (File.Exists(tempLgpoFile))
-                {
-                    File.Delete(tempLgpoFile);
+                            string output = await proc.StandardOutput.ReadToEndAsync();
+                            string error = await proc.StandardError.ReadToEndAsync();
+                            proc.WaitForExit();
+
+                            // Log the output and error streams
+                            if (!string.IsNullOrEmpty(output))
+                            {
+                                Logger.Instance.WriteLog($"LGPO.exe Output: {output}");
+                            }
+                            if (!string.IsNullOrEmpty(error))
+                            {
+                                Logger.Instance.WriteLog($"LGPO.exe Error: {error}");
+                            }
+
+                            if (proc.ExitCode != 0)
+                            {
+                                Logger.Instance.WriteLog($"LGPO.exe exited with code {proc.ExitCode}.");
+                                var errorBox = new WpfMessageBox
+                                {
+                                    Title = "LGPO.exe Error",
+                                    Content = $"LGPO.exe encountered an error while processing Registry policies.\n\nExit Code: {proc.ExitCode}\n\nError: {error}\n\nPlease ensure that the LGPO text file is correctly formatted and that you have the necessary permissions to execute LGPO.exe.",
+                                    CloseButtonText = "OK"
+                                };
+                                await errorBox.ShowDialogAsync();
+                            }
+                            else
+                            {
+                                Logger.Instance.WriteLog("LGPO.exe executed successfully for Registry policies.");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Instance.WriteLog($"Exception while running LGPO.exe: {ex.Message}");
+                            var exceptionBox = new WpfMessageBox
+                            {
+                                Title = "LGPO.exe Exception",
+                                Content = $"An exception occurred while executing LGPO.exe: {ex.Message}",
+                                CloseButtonText = "OK"
+                            };
+                            await exceptionBox.ShowDialogAsync();
+                        }
+                    }
+
+                    // Clean up temporary LGPO file
+                    if (File.Exists(tempLgpoFile))
+                    {
+                        try
+                        {
+                            File.Delete(tempLgpoFile);
+                            Logger.Instance.WriteLog($"Temporary LGPO file deleted: {tempLgpoFile}");
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Instance.WriteLog($"Failed to delete temporary LGPO file: {ex.Message}");
+                        }
+                    }
                 }
             }
 
@@ -455,15 +535,16 @@ namespace Techolics_
             if (!string.IsNullOrEmpty(gpoDescription))
             {
                 File.WriteAllText(Path.Combine(gpoFolderPath, "gpo_metadata.txt"), $"Name: {gpoName}\nDescription: {gpoDescription}");
+                Logger.Instance.WriteLog($"GPO metadata written to {Path.Combine(gpoFolderPath, "gpo_metadata.txt")}");
             }
 
-            var successMsg = new Wpf.Ui.Controls.MessageBox
+            var successMsgBox = new WpfMessageBox
             {
                 Title = "GPO Created",
                 Content = $"GPO '{gpoName}' has been created successfully.",
                 CloseButtonText = "OK"
             };
-            await successMsg.ShowDialogAsync();
+            await successMsgBox.ShowDialogAsync();
         }
 
         private string? GetPolicyFinalValueForGPO(Policy p, bool isRevert)
@@ -511,35 +592,7 @@ namespace Techolics_
             return (hiveName, subKeyPath);
         }
 
-        private string GetLGPORegistryValueLine(string valueName, string value, string valueType)
-        {
-            if (string.Equals(valueType, "Boolean", StringComparison.OrdinalIgnoreCase))
-            {
-                int v = int.Parse(value);
-                return $"\"{valueName}\"=dword:{v.ToString("x8")}";
-            }
-            else if (string.Equals(valueType, "Integer", StringComparison.OrdinalIgnoreCase))
-            {
-                if (int.TryParse(value, out int intVal))
-                {
-                    return $"\"{valueName}\"=dword:{intVal.ToString("x8")}";
-                }
-                else
-                {
-                    return $"\"{valueName}\"=\"{value}\"";
-                }
-            }
-            else if (string.Equals(valueType, "String", StringComparison.OrdinalIgnoreCase))
-            {
-                return $"\"{valueName}\"=\"{value}\"";
-            }
-
-            return $"\"{valueName}\"=\"{value}\"";
-        }
-        private void myDataGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-        {
-
-        }
+        // Removed GetLGPORegistryValueLine method as it's now redundant
 
         private async void ImportButton_Click(object sender, RoutedEventArgs e)
         {
@@ -584,7 +637,7 @@ namespace Techolics_
 
                         if (process.ExitCode != 0)
                         {
-                            var messageBox = new Wpf.Ui.Controls.MessageBox
+                            var messageBox = new WpfMessageBox
                             {
                                 Title = "Error",
                                 Content = $"Error processing PDF: {error}",
@@ -597,7 +650,7 @@ namespace Techolics_
                         string generatedXmlPath = @"C:\Users\shrav\Desktop\pdf\Techolics_\data\policies.xml"; // Update this path
                         LoadGeneratedXml(generatedXmlPath);
 
-                        var successMessageBox = new Wpf.Ui.Controls.MessageBox
+                        var successMessageBox = new WpfMessageBox
                         {
                             Title = "Success",
                             Content = "PDF imported successfully!",
@@ -607,7 +660,7 @@ namespace Techolics_
                     }
                     catch (Exception ex)
                     {
-                        var errorBox = new Wpf.Ui.Controls.MessageBox
+                        var errorBox = new WpfMessageBox
                         {
                             Title = "Error",
                             Content = $"An error occurred: {ex.Message}",
@@ -622,11 +675,12 @@ namespace Techolics_
                 ProgressBar.Visibility = Visibility.Collapsed; // Hide the progress bar
             }
         }
+
         private void LoadGeneratedXml(string xmlPath)
         {
             // Logic to parse the XML and load it into the UI
+            LoadGeneratedXmlFromPolicy(xmlPath);
         }
-
 
         private void LoadGeneratedXmlFromPolicy(string xmlPath)
         {
@@ -638,8 +692,10 @@ namespace Techolics_
             {
                 var item = new Item
                 {
-                    ID = policy.Attribute("id")?.Value,
-                    Name = policy.Element("Documentation")?.Element("Title")?.Value,
+                    ID = policy.Attribute("id")?.Value ?? "Unknown",
+                    Name = policy.Element("Documentation")?.Element("Title")?.Value ?? "No Title",
+                    Current = "Not Configured",
+                    Status = "N/A"
                     // Populate other fields as needed
                 };
 
@@ -647,13 +703,17 @@ namespace Techolics_
             }
 
             myDataGrid.Items.Refresh(); // Refresh the DataGrid
+            Logger.Instance.WriteLog($"Loaded {Items.Count} policies from XML.");
         }
-
-
 
         private void ExportMenuItem_Click(object sender, RoutedEventArgs e)
         {
             // Logic for exporting data
+            // Implement as needed
+        }
+
+        private void myDataGrid_SelectionChanged_1(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
 
         }
     }

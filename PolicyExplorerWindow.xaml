@@ -152,7 +152,7 @@
                     CanUserAddRows="False"
                     HeadersVisibility="Column"
                     IsReadOnly="False"
-                    SelectionMode="Extended">
+                    SelectionMode="Extended" SelectionChanged="myDataGrid_SelectionChanged_1">
                     <DataGrid.Columns>
                         <DataGridCheckBoxColumn
                             Width="1*"
@@ -198,53 +198,29 @@
                             Width="1.1*"
                             Binding="{Binding ID}"
                             Header="ID"
-                            IsReadOnly="True">
-                            <!--  CellStyle for ID column  -->
-                            <DataGridTextColumn.CellStyle>
-                                <Style TargetType="DataGridCell">
-                                    <Setter Property="VerticalAlignment" Value="Center" />
-                                </Style>
-                            </DataGridTextColumn.CellStyle>
-                        </DataGridTextColumn>
+                            IsReadOnly="True"/>
+
 
                         <DataGridTextColumn
                             Width="1*"
                             Binding="{Binding Profile}"
                             Header="Profile"
-                            IsReadOnly="True">
-                            <!--  CellStyle for Profile column  -->
-                            <DataGridTextColumn.CellStyle>
-                                <Style TargetType="DataGridCell">
-                                    <Setter Property="VerticalAlignment" Value="Center" />
-                                </Style>
-                            </DataGridTextColumn.CellStyle>
-                        </DataGridTextColumn>
+                            IsReadOnly="True"/>
+
 
                         <DataGridTextColumn
                             Width="4*"
                             Binding="{Binding Name}"
                             Header="Name"
-                            IsReadOnly="True">
-                            <!--  CellStyle for Name column  -->
-                            <DataGridTextColumn.CellStyle>
-                                <Style TargetType="DataGridCell">
-                                    <Setter Property="VerticalAlignment" Value="Center" />
-                                </Style>
-                            </DataGridTextColumn.CellStyle>
-                        </DataGridTextColumn>
+                            IsReadOnly="True"/>
+
 
                         <DataGridTextColumn
                             Width="1*"
                             Binding="{Binding Current}"
                             Header="Current"
-                            IsReadOnly="True">
-                            <!--  CellStyle for Current column  -->
-                            <DataGridTextColumn.CellStyle>
-                                <Style TargetType="DataGridCell">
-                                    <Setter Property="VerticalAlignment" Value="Center" />
-                                </Style>
-                            </DataGridTextColumn.CellStyle>
-                        </DataGridTextColumn>
+                            IsReadOnly="True"/>
+
 
                         <DataGridTextColumn
                             Width="1*"
@@ -254,7 +230,7 @@
                             <!--  Apply CellStyle for Status column  -->
                             <DataGridTextColumn.CellStyle>
                                 <Style TargetType="DataGridCell">
-                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                    
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding Status}" Value="Fail">
                                             <Setter Property="Background" Value="LightCoral" />
