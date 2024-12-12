@@ -1,4 +1,5 @@
 ﻿// PolicyExplorerWindow.xaml.cs
+using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -300,7 +301,240 @@ namespace Techolics_
             }
 
         }
+        private async void CreateGPOButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Prompt user for GPO name
+            var nameDialog = new InputDialogWindow("Create GPO", "Enter GPO Name (leave blank for a random name):");
+            nameDialog.Owner = this;
+            bool? nameResult = nameDialog.ShowDialog();
+            if (nameResult != true)
+            {
+                // User canceled or closed the dialog
+                return;
+            }
+            string gpoName = string.IsNullOrWhiteSpace(nameDialog.UserInput) ? $"GPO_{DateTime.Now:yyyyMMdd_HHmmss}" : nameDialog.UserInput.Trim();
 
+            // Prompt user for GPO description
+            var descDialog = new InputDialogWindow("GPO Description", "Enter GPO Description (optional):");
+            descDialog.Owner = this;
+            bool? descResult = descDialog.ShowDialog();
+            string gpoDescription = descResult == true ? descDialog.UserInput.Trim() : string.Empty;
+
+            // Prompt user to select where to save the GPO using CommonOpenFileDialog
+            var folderDialog = new CommonOpenFileDialog
+            {
+                Title = "Select a directory to save the GPO",
+                IsFolderPicker = true,
+                EnsurePathExists = true
+            };
+
+            if (folderDialog.ShowDialog() != CommonFileDialogResult.Ok)
+            {
+                // User canceled folder selection
+                return;
+            }
+
+            string gpoFolderPath = Path.Combine(folderDialog.FileName, gpoName);
+            Directory.CreateDirectory(gpoFolderPath);
+
+            string machinePath = Path.Combine(gpoFolderPath, "MACHINE");
+            Directory.CreateDirectory(machinePath);
+            Directory.CreateDirectory(Path.Combine(machinePath, "Microsoft", "Windows NT", "SecEdit"));
+
+            string userPath = Path.Combine(gpoFolderPath, "USER");
+            Directory.CreateDirectory(userPath);
+
+            var selectedItems = logic.GetSelectedItems();
+            if (selectedItems == null || selectedItems.Count == 0)
+            {
+                var noPoliciesMsg = new Wpf.Ui.Controls.MessageBox
+                {
+                    Title = "No Policies Selected",
+                    Content = "Please select at least one policy before creating a GPO.",
+                    CloseButtonText = "OK"
+                };
+                await noPoliciesMsg.ShowDialogAsync();
+                return;
+            }
+
+            bool hasSeceditPolicies = false;
+            bool hasRegistryPolicies = false;
+
+            var seceditLines = new List<string>
+            {
+                "[Unicode]",
+                "Unicode=yes",
+                "[Version]",
+                "signature=\"$CHICAGO$\"",
+                "Revision=1"
+            };
+
+            var registryEntries = new List<string> { "COMPUTER" };
+
+            foreach (var item in selectedItems)
+            {
+                var p = item.Policy;
+                if (p == null) continue;
+                string? targetValue = GetPolicyFinalValueForGPO(p, false);
+
+                if (p.Implementation?.Secedit != null && !string.IsNullOrEmpty(p.Implementation.Secedit.TemplateSetting))
+                {
+                    hasSeceditPolicies = true;
+                    string section = p.Implementation.Secedit.Section;
+                    if (string.IsNullOrEmpty(section))
+                        section = "System Access";
+
+                    if (!seceditLines.Any(l => l.Equals($"[{section}]", StringComparison.OrdinalIgnoreCase)))
+                        seceditLines.Add($"[{section}]");
+
+                    string convertedValue = PolicyValueConverter.ConvertForConfiguration(targetValue ?? "No one", p.ValueType);
+                    string settingLine = p.Implementation.Secedit.TemplateSetting.Replace("%Value%", convertedValue);
+                    seceditLines.Add(settingLine);
+                }
+                else if (p.Implementation?.Registry != null)
+                {
+                    hasRegistryPolicies = true;
+                    string convertedValue = PolicyValueConverter.ConvertForConfiguration(targetValue ?? "", p.ValueType);
+
+                    var regImpl = p.Implementation.Registry;
+                    (string? hiveName, string? subKeyPath) = ParseRegistryKey(regImpl.Key);
+                    if (!string.IsNullOrEmpty(subKeyPath))
+                    {
+                        registryEntries.Add(subKeyPath);
+                        string lgpoValueLine = GetLGPORegistryValueLine(regImpl.ValueName, convertedValue, p.ValueType);
+                        registryEntries.Add(lgpoValueLine);
+                        registryEntries.Add(""); // blank line to separate keys
+                    }
+                }
+            }
+
+            // Write GptTmpl.inf if needed
+            if (hasSeceditPolicies)
+            {
+                string seceditPath = Path.Combine(machinePath, "Microsoft", "Windows NT", "SecEdit");
+                string infPath = Path.Combine(seceditPath, "GptTmpl.inf");
+                File.WriteAllLines(infPath, seceditLines);
+            }
+
+            // If we have registry policies, run LGPO to create Registry.pol
+            if (hasRegistryPolicies)
+            {
+                string tempLgpoFile = Path.GetTempFileName();
+                File.WriteAllLines(tempLgpoFile, registryEntries);
+
+                // Adjust LGPO.exe path as necessary
+                string lgpoExePath = "LGPO.exe";
+                if (!File.Exists(lgpoExePath))
+                {
+                    Logger.Instance.WriteLog("LGPO.exe not found. Please ensure it is available.");
+                }
+                else
+                {
+                    var startInfo = new System.Diagnostics.ProcessStartInfo
+                    {
+                        FileName = lgpoExePath,
+                        Arguments = $"/parse /m \"{tempLgpoFile}\" /path \"{gpoFolderPath}\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+
+                    using (var proc = System.Diagnostics.Process.Start(startInfo))
+                    {
+                        proc?.WaitForExit();
+                    }
+                }
+
+                if (File.Exists(tempLgpoFile))
+                {
+                    File.Delete(tempLgpoFile);
+                }
+            }
+
+            // Store metadata
+            if (!string.IsNullOrEmpty(gpoDescription))
+            {
+                File.WriteAllText(Path.Combine(gpoFolderPath, "gpo_metadata.txt"), $"Name: {gpoName}\nDescription: {gpoDescription}");
+            }
+
+            var successMsg = new Wpf.Ui.Controls.MessageBox
+            {
+                Title = "GPO Created",
+                Content = $"GPO '{gpoName}' has been created successfully.",
+                CloseButtonText = "OK"
+            };
+            await successMsg.ShowDialogAsync();
+        }
+
+        private string? GetPolicyFinalValueForGPO(Policy p, bool isRevert)
+        {
+            if (isRevert)
+            {
+                if (p.DefaultValue != null)
+                {
+                    if (!string.IsNullOrEmpty(p.DefaultValue.Value))
+                        return p.DefaultValue.Value;
+                    bool standalone = Environment.MachineName == Environment.UserDomainName;
+                    return standalone ? p.DefaultValue.Standalone : p.DefaultValue.Domain;
+                }
+                return null;
+            }
+            else
+            {
+                if (p.ValueConstraints?.RequiredValues != null && p.ValueConstraints.RequiredValues.Count > 0)
+                {
+                    return p.ValueConstraints.RequiredValues[0].Value;
+                }
+
+                if (p.DefaultValue != null)
+                {
+                    if (!string.IsNullOrEmpty(p.DefaultValue.Value))
+                        return p.DefaultValue.Value;
+                    bool standalone = Environment.MachineName == Environment.UserDomainName;
+                    return standalone ? p.DefaultValue.Standalone : p.DefaultValue.Domain;
+                }
+            }
+
+            return null;
+        }
+
+        private (string? hiveName, string? subKeyPath) ParseRegistryKey(string key)
+        {
+            int firstBackslashIndex = key.IndexOf('\\');
+            if (firstBackslashIndex <= 0)
+            {
+                return (null, null);
+            }
+
+            string hiveName = key.Substring(0, firstBackslashIndex);
+            string subKeyPath = key.Substring(firstBackslashIndex + 1);
+            return (hiveName, subKeyPath);
+        }
+
+        private string GetLGPORegistryValueLine(string valueName, string value, string valueType)
+        {
+            if (string.Equals(valueType, "Boolean", StringComparison.OrdinalIgnoreCase))
+            {
+                int v = int.Parse(value);
+                return $"\"{valueName}\"=dword:{v.ToString("x8")}";
+            }
+            else if (string.Equals(valueType, "Integer", StringComparison.OrdinalIgnoreCase))
+            {
+                if (int.TryParse(value, out int intVal))
+                {
+                    return $"\"{valueName}\"=dword:{intVal.ToString("x8")}";
+                }
+                else
+                {
+                    return $"\"{valueName}\"=\"{value}\"";
+                }
+            }
+            else if (string.Equals(valueType, "String", StringComparison.OrdinalIgnoreCase))
+            {
+                return $"\"{valueName}\"=\"{value}\"";
+            }
+
+            return $"\"{valueName}\"=\"{value}\"";
+        }
         private void myDataGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
 
