@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield background -->
+  <path
+    d="M24 4L8 12V24C8 34.8 14.9 44.9 24 47C33.1 44.9 40 34.8 40 24V12L24 4Z"
+    fill="#EFF6FF"
+    stroke="#1E40AF"
+    stroke-width="2"
+  />
+  <!-- Document background -->
+  <path
+    d="M18 14H30V34H18V14Z"
+    fill="#FFFFFF"
+    stroke="#1E40AF"
+    stroke-width="1"
+  />
+  <!-- Document lines -->
+  <path
+    d="M20 18H28M20 22H28M20 26H24"
+    stroke="#1E40AF"
+    stroke-width="1.5"
+    stroke-linecap="round"
+  />
+  <!-- Checkmark -->
+  <path
+    d="M32 32L28 36L26 34"
+    stroke="#22C55E"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    fill="none"
+  />
+  <!-- Lock body -->
+  <path
+    d="M20 30H16V34H20V30Z"
+    fill="#3B82F6"
+  />
+  <!-- Lock hook -->
+  <path
+    d="M18 30V28C18 27.4477 18.4477 27 19 27H21C21.5523 27 22 27.4477 22 28V30"
+    stroke="#3B82F6"
+    stroke-width="1.5"
+    fill="none"
+  />
+</svg>
