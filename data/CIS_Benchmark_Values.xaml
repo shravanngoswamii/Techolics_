@@ -228,8 +228,8 @@
                 <ValueConstraints>
                     <RequiredValue operator="equal" value="Administrators, Remote Desktop Users" />
                 </ValueConstraints>
-				<Implementation>
-					<Secedit section="Privilege Rights">
+                <Implementation>
+                    <Secedit section="Privilege Rights">
                         <TemplateSetting>SeNetworkLogonRight = %Value%</TemplateSetting>
                     </Secedit>
                 </Implementation>
@@ -244,8 +244,8 @@
                 <ValueConstraints>
                     <RequiredValue operator="equal" value="No One" />
                 </ValueConstraints>
-				<Implementation>
-					<Secedit section="Privilege Rights">
+                <Implementation>
+                    <Secedit section="Privilege Rights">
                         <TemplateSetting>SeTcbPrivilege = %Value%</TemplateSetting>
                     </Secedit>
                 </Implementation>
@@ -260,8 +260,8 @@
                 <ValueConstraints>
                     <RequiredValue operator="equal" value="Administrators, LocalService, NetworkService" />
                 </ValueConstraints>
-				<Implementation>
-					<Secedit section="Privilege Rights">
+                <Implementation>
+                    <Secedit section="Privilege Rights">
                         <TemplateSetting>SeIncreaseQuotaPrivilege = %Value%</TemplateSetting>
                     </Secedit>
                 </Implementation>
@@ -276,8 +276,8 @@
                 <ValueConstraints>
                     <RequiredValue operator="equal" value="Administrators, Users" />
                 </ValueConstraints>
-				<Implementation>
-					<Secedit section="Privilege Rights">
+                <Implementation>
+                    <Secedit section="Privilege Rights">
                         <TemplateSetting>SeInteractiveLogonRight = %Value%</TemplateSetting>
                     </Secedit>
                 </Implementation>
@@ -292,8 +292,8 @@
                 <ValueConstraints>
                     <RequiredValue operator="equal" value="Administrators, Remote Desktop Users" />
                 </ValueConstraints>
-				<Implementation>
-					<Secedit section="Privilege Rights">
+                <Implementation>
+                    <Secedit section="Privilege Rights">
                         <TemplateSetting>SeRemoteInteractiveLogonRight = %Value%</TemplateSetting>
                     </Secedit>
                 </Implementation>
@@ -308,8 +308,8 @@
                 <ValueConstraints>
                     <RequiredValue operator="equal" value="Administrators" />
                 </ValueConstraints>
-				<Implementation>
-					<Secedit section="Privilege Rights">
+                <Implementation>
+                    <Secedit section="Privilege Rights">
                         <TemplateSetting>SeBackupPrivilege = %Value%</TemplateSetting>
                     </Secedit>
                 </Implementation>
@@ -324,8 +324,8 @@
                 <ValueConstraints>
                     <RequiredValue operator="equal" value="Administrators, LocalService" />
                 </ValueConstraints>
-				<Implementation>
-					<Secedit section="Privilege Rights">
+                <Implementation>
+                    <Secedit section="Privilege Rights">
                         <TemplateSetting>SeSystemtimePrivilege = %Value%</TemplateSetting>
                     </Secedit>
                 </Implementation>
@@ -340,12 +340,70 @@
                 <ValueConstraints>
                     <RequiredValue operator="equal" value="Administrators, LocalService, Users" />
                 </ValueConstraints>
-				<Implementation>
-					<Secedit section="Privilege Rights">
+                <Implementation>
+                    <Secedit section="Privilege Rights">
                         <TemplateSetting>SeTimeZonePrivilege = %Value%</TemplateSetting>
                     </Secedit>
                 </Implementation>
             </Policy>
+
+            <Policy
+                id="2.2.28"
+                mode="Automated"
+                profile="L2"
+                title="Log on as a batch job"
+                value_type="String">
+                <DefaultValue value="Administrators, Backup Operators, Performance Log Users" />
+                <ValueConstraints>
+                    <RequiredValue operator="equal" value="Administrators, Backup Operators, Performance Log Users" />
+                </ValueConstraints>
+                <Implementation>
+                    <Secedit section="Privilege Rights">
+                        <TemplateSetting>SeBatchLogonRight = %Value%</TemplateSetting>
+                    </Secedit>
+                </Implementation>
+            </Policy>
+
+            <Policy
+                id="2.2.29"
+                mode="Automated"
+                profile="L2"
+                title="Log on as a service"
+                value_type="String">
+                <DefaultValue value="Users" />
+                <ValueConstraints>
+                    <RequiredValue operator="equal" value="Administrators" />
+                </ValueConstraints>
+                <Implementation>
+                    <Secedit section="Privilege Rights">
+                        <TemplateSetting>SeServiceLogonRight = %Value%</TemplateSetting>
+                    </Secedit>
+                </Implementation>
+            </Policy>
+
+            <Section id="2.3.7" title="Interactive logon ">
+                <Policy
+                    id="2.3.7.3"
+                    mode="Automated"
+                    profile="BL"
+                    title="Interactive logon: Machine account lockout threshold"
+                    value_type="Integer">
+                    <DefaultValue value="0" />
+                    <ValueConstraints>
+                        <RequiredValue operator="less_or_equal" value="10" />
+                        <RequiredValue operator="not_equal" value="0" />
+                    </ValueConstraints>
+                    <Implementation>
+                        <Registry>
+                            <Key>HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System</Key>
+                            <ValueName>MaxDevicePasswordFailedAttempts</ValueName>
+                            <ValueType>DWORD</ValueType>
+                        </Registry>
+                    </Implementation>
+                </Policy>
+            </Section>
         </Section>
     </Section>
 </CIS_Benchmark>
+
+

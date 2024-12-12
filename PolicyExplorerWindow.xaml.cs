@@ -6,8 +6,11 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Threading;
 using System.Xml.Linq;
 using Techolics_.Logging;
@@ -15,6 +18,10 @@ using Techolics_.PolicyManagement;
 using Wpf.Ui.Appearance;
 using Wpf.Ui.Controls;
 using WpfMessageBox = Wpf.Ui.Controls.MessageBox;
+
+// Namespace Aliasing to Resolve Button Ambiguity
+using WpfUiButton = Wpf.Ui.Controls.Button;
+using SystemButton = System.Windows.Controls.Button;
 
 namespace Techolics_
 {
@@ -24,10 +31,10 @@ namespace Techolics_
         private List<string> selectedProfiles;
         private string operation;
 
-        // Add a DispatcherTimer to periodically refresh the logs
+        // DispatcherTimer for log refreshing
         private DispatcherTimer logRefreshTimer;
 
-        // Use ObservableCollection for dynamic updates
+        // ObservableCollection for DataGrid
         public ObservableCollection<Item> Items { get; set; } = new ObservableCollection<Item>();
 
         public PolicyExplorerWindow(List<string> selectedProfiles, string operation)
@@ -381,7 +388,7 @@ namespace Techolics_
             {
                 var p = item.Policy;
                 if (p == null) continue;
-                string? targetValue = GetPolicyFinalValueForGPO(p, false);
+                string? targetValue = string.IsNullOrWhiteSpace(item.CustomValue) ? GetPolicyFinalValueForGPO(p, false) : item.CustomValue;
 
                 if (p.Implementation?.Secedit != null && !string.IsNullOrEmpty(p.Implementation.Secedit.TemplateSetting))
                 {
@@ -592,8 +599,6 @@ namespace Techolics_
             return (hiveName, subKeyPath);
         }
 
-        // Removed GetLGPORegistryValueLine method as it's now redundant
-
         private async void ImportButton_Click(object sender, RoutedEventArgs e)
         {
             ProgressBar.Visibility = Visibility.Visible; // Show the progress bar
@@ -695,7 +700,8 @@ namespace Techolics_
                     ID = policy.Attribute("id")?.Value ?? "Unknown",
                     Name = policy.Element("Documentation")?.Element("Title")?.Value ?? "No Title",
                     Current = "Not Configured",
-                    Status = "N/A"
+                    Status = "N/A",
+                    ValueType = policy.Element("ValueType")?.Value ?? "String" // Ensure ValueType is set
                     // Populate other fields as needed
                 };
 
@@ -712,9 +718,59 @@ namespace Techolics_
             // Implement as needed
         }
 
-        private void myDataGrid_SelectionChanged_1(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void myDataGrid_SelectionChanged_1(object sender, SelectionChangedEventArgs e)
         {
-
+            // Implement selection changed logic here if needed
         }
+
+        #region Customize GPO Functionality
+
+        private void CustomizeGPOButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Toggle visibility of the CustomValue column
+            if (CustomValueColumn.Visibility == Visibility.Collapsed)
+            {
+                CustomValueColumn.Visibility = Visibility.Visible;
+                CustomizeGPOButton.Content = "Hide Customizations";
+                Logger.Instance.WriteLog("CustomValue column is now visible for customization.");
+            }
+            else
+            {
+                CustomValueColumn.Visibility = Visibility.Collapsed;
+                CustomizeGPOButton.Content = "Customize GPO";
+                Logger.Instance.WriteLog("CustomValue column is now hidden.");
+            }
+        }
+
+        private async void EditCustomValueButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is SystemButton editButton && editButton.Tag is Item policyItem)
+            {
+                var editWindow = new Techolics_.Pages.EditPolicyWindow(this, policyItem, logic.GetBenchmarkValues(), logic.GetBenchmarkDocumentation());
+                editWindow.Owner = this;
+                bool? result = editWindow.ShowDialog();
+
+                if (result == true)
+                {
+                    myDataGrid.Items.Refresh();
+                    Logger.Instance.WriteLog($"Custom value updated for policy: {policyItem.Name}");
+                }
+            }
+        }
+
+
+        // Ensure only numeric input for Integer TextBox using EventSetter
+        private void IntegerTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            // Allow only digits
+            e.Handled = !IsTextNumeric(e.Text);
+        }
+
+        private bool IsTextNumeric(string text)
+        {
+            return Regex.IsMatch(text, @"^\d+$");
+        }
+
+        #endregion
     }
 }

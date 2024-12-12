@@ -244,6 +244,17 @@ namespace Techolics_
     public class Item : INotifyPropertyChanged
     {
         private bool _isSelected;
+        private string _id = "";
+        private string _profile = "";
+        private string _name = "";
+        private string _current = "";
+        private string _status = "";
+        private string _description = "";
+        private string _defaultValue = "";
+        private Policy? _policy;
+        private string _customValue = "";
+        private string _valueType = ""; // Added ValueType
+
         public bool IsSelected
         {
             get => _isSelected;
@@ -257,7 +268,6 @@ namespace Techolics_
             }
         }
 
-        private string _id = "";
         public string ID
         {
             get => _id;
@@ -271,7 +281,6 @@ namespace Techolics_
             }
         }
 
-        private string _profile = "";
         public string Profile
         {
             get => _profile;
@@ -285,7 +294,6 @@ namespace Techolics_
             }
         }
 
-        private string _name = "";
         public string Name
         {
             get => _name;
@@ -299,7 +307,6 @@ namespace Techolics_
             }
         }
 
-        private string _current = "";
         public string Current
         {
             get => _current;
@@ -313,7 +320,6 @@ namespace Techolics_
             }
         }
 
-        private string _status = "";
         public string Status
         {
             get => _status;
@@ -327,7 +333,6 @@ namespace Techolics_
             }
         }
 
-        private string _description = "";
         public string Description
         {
             get => _description;
@@ -341,7 +346,6 @@ namespace Techolics_
             }
         }
 
-        private string _defaultValue = "";
         public string DefaultValue
         {
             get => _defaultValue;
@@ -355,7 +359,6 @@ namespace Techolics_
             }
         }
 
-        private Policy? _policy;
         public Policy? Policy
         {
             get => _policy;
@@ -370,7 +373,6 @@ namespace Techolics_
         }
 
         // New Property for Custom Value
-        private string _customValue = "";
         public string CustomValue
         {
             get => _customValue;
@@ -384,6 +386,20 @@ namespace Techolics_
             }
         }
 
+        // New Property for ValueType
+        public string ValueType
+        {
+            get => _valueType;
+            set
+            {
+                if (_valueType != value)
+                {
+                    _valueType = value;
+                    OnPropertyChanged(nameof(ValueType));
+                }
+            }
+        }
+
         public event PropertyChangedEventHandler? PropertyChanged;
 
         protected void OnPropertyChanged(string propertyName)
@@ -391,4 +407,5 @@ namespace Techolics_
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
+
 }

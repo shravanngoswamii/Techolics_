@@ -68,5 +68,7 @@
 	<!-- Additional universal well-known SIDs -->
 	<Mapping key="Null SID" value="*S-1-0-0" />
 	<!-- Same as No one -->
+	<Mapping key="NT SERVICE" value="*S-1-5-80" />
+	<Mapping key="All Services" value="*S-1-5-80-0" />
 
 </Root>

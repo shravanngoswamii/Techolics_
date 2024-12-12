@@ -1,4 +1,5 @@
-﻿using System;
+﻿// EditPolicyWindow.xaml.cs
+using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -31,7 +32,7 @@ namespace Techolics_.Pages
             _policyExplorerWindow = explorer;
 
             PolicyNameTextBlock.Text = _policy.Title;
-            DefaultValueTextBlock.Text = _policyItem.DefaultValue;
+            DefaultValueTextBlock.Text = _policyItem.Current;
 
             if (_policy.ValueConstraints?.RequiredValues != null && _policy.ValueConstraints.RequiredValues.Count > 0)
             {
@@ -52,11 +53,11 @@ namespace Techolics_.Pages
                     AvailableUsersListBox.Items.Add(user);
                 }
 
-                if (!string.IsNullOrEmpty(_policyItem.Current)
-                    && !_policyItem.Current.Equals("Not Configured", StringComparison.OrdinalIgnoreCase)
-                    && !_policyItem.Current.Equals("No one", StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrEmpty(_policyItem.CustomValue)
+                    && !_policyItem.CustomValue.Equals("Not Configured", StringComparison.OrdinalIgnoreCase)
+                    && !_policyItem.CustomValue.Equals("No one", StringComparison.OrdinalIgnoreCase))
                 {
-                    var currentParts = _policyItem.Current.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                    var currentParts = _policyItem.CustomValue.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                                                           .Select(x => x.Trim()).ToList();
                     foreach (var part in currentParts)
                     {
@@ -70,7 +71,7 @@ namespace Techolics_.Pages
             }
             else if (string.Equals(_policy.ValueType, "Boolean", StringComparison.OrdinalIgnoreCase))
             {
-                if (_policyItem.Current.Equals("Enabled", StringComparison.OrdinalIgnoreCase))
+                if (_policyItem.CustomValue.Equals("Enabled", StringComparison.OrdinalIgnoreCase))
                 {
                     BooleanEnabledRadio.IsChecked = true;
                 }
@@ -81,7 +82,7 @@ namespace Techolics_.Pages
             }
             else if (string.Equals(_policy.ValueType, "Integer", StringComparison.OrdinalIgnoreCase))
             {
-                if (int.TryParse(_policyItem.Current, out int val))
+                if (int.TryParse(_policyItem.CustomValue, out int val))
                 {
                     IntegerTextBox.Text = val.ToString();
                 }
@@ -150,7 +151,6 @@ namespace Techolics_.Pages
             DialogResult = true;
             this.Close();
         }
-
 
         private async Task<string?> GetNewValueFromControls()
         {
@@ -226,7 +226,6 @@ namespace Techolics_.Pages
             };
             await messageBox.ShowDialogAsync();
         }
-
 
         private void AddUserButton_Click(object sender, RoutedEventArgs e)
         {

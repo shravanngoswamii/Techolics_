@@ -1,4 +1,5 @@
-﻿<ui:FluentWindow
+﻿<!-- EditPolicyWindow.xaml remains unchanged -->
+<ui:FluentWindow
     x:Class="Techolics_.Pages.EditPolicyWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -10,18 +11,18 @@
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <!--  Policy Name  -->
+            <!-- Policy Name -->
             <RowDefinition Height="Auto" />
-            <!--  Default Value  -->
+            <!-- Default Value -->
             <RowDefinition Height="Auto" />
-            <!--  CIS Recommended Values  -->
+            <!-- CIS Recommended Values -->
             <RowDefinition Height="*" />
-            <!--  Input based on ValueType  -->
+            <!-- Input based on ValueType -->
             <RowDefinition Height="Auto" />
-            <!--  Buttons  -->
+            <!-- Buttons -->
         </Grid.RowDefinitions>
 
-        <!--  Policy Name (Read-only)  -->
+        <!-- Policy Name (Read-only) -->
         <StackPanel
             Grid.Row="0"
             Margin="0,0,0,10"
@@ -36,7 +37,7 @@
                 FontWeight="Bold" />
         </StackPanel>
 
-        <!--  Default Value  -->
+        <!-- Default Value -->
         <StackPanel
             Grid.Row="1"
             Margin="0,0,0,10"
@@ -48,7 +49,7 @@
             <TextBlock x:Name="DefaultValueTextBlock" VerticalAlignment="Center" />
         </StackPanel>
 
-        <!--  CIS Recommended Value  -->
+        <!-- CIS Recommended Value -->
         <StackPanel
             Grid.Row="2"
             Margin="0,0,0,10"
@@ -60,24 +61,23 @@
             <TextBlock x:Name="CISRecommendedTextBlock" VerticalAlignment="Center" />
         </StackPanel>
 
-        <!--  Dynamic Input Area  -->
+        <!-- Dynamic Input Area -->
         <Grid Grid.Row="3">
-            <!--  We'll use a Grid with multiple child controls and show/hide them depending on ValueType  -->
+            <!-- We'll use a Grid with multiple child controls and show/hide them depending on ValueType -->
             <Grid x:Name="IntegerPanel" Visibility="Collapsed">
-    <StackPanel Orientation="Horizontal" Margin="10">
-        <TextBlock
-            Width="150"
-            VerticalAlignment="Center"
-            Text="Enter Integer Value:"
-            Margin="0,0,10,0" />
-        <TextBox
-            x:Name="IntegerTextBox"
-            Width="100"
-            VerticalAlignment="Center"
-            HorizontalAlignment="Left" />
-    </StackPanel>
-</Grid>
-
+                <StackPanel Orientation="Horizontal" Margin="10">
+                    <TextBlock
+                        Width="150"
+                        VerticalAlignment="Center"
+                        Text="Enter Integer Value:"
+                        Margin="0,0,10,0" />
+                    <TextBox
+                        x:Name="IntegerTextBox"
+                        Width="100"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Left" />
+                </StackPanel>
+            </Grid>
 
             <Grid x:Name="BooleanPanel" Visibility="Collapsed">
                 <StackPanel Orientation="Horizontal">
@@ -100,13 +100,13 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <!--  Left List (Available Users)  -->
+                <!-- Left List (Available Users) -->
                 <ListBox
                     x:Name="AvailableUsersListBox"
                     Grid.Column="0"
                     SelectionMode="Extended" />
 
-                <!--  Buttons  -->
+                <!-- Buttons -->
                 <StackPanel
                     Grid.Column="1"
                     HorizontalAlignment="Center"
@@ -117,16 +117,16 @@
                         Width="50"
                         Margin="0,5"
                         Click="AddUserButton_Click"
-                        Content="right" />
+                        Content="→" />
                     <Button
                         x:Name="RemoveUserButton"
                         Width="50"
                         Margin="0,5"
                         Click="RemoveUserButton_Click"
-                        Content="left" />
+                        Content="←" />
                 </StackPanel>
 
-                <!--  Right List (Selected Users)  -->
+                <!-- Right List (Selected Users) -->
                 <ListBox
                     x:Name="SelectedUsersListBox"
                     Grid.Column="2"
@@ -134,7 +134,7 @@
             </Grid>
         </Grid>
 
-        <!--  Buttons  -->
+        <!-- Buttons -->
         <StackPanel
             Grid.Row="4"
             HorizontalAlignment="Right"
@@ -152,6 +152,5 @@
                 Click="CancelButton_Click"
                 Content="Cancel" />
         </StackPanel>
-
     </Grid>
 </ui:FluentWindow>
