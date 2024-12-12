@@ -6,112 +6,134 @@
     Title="Policy Explorer"
     Width="1200"
     Height="700"
+    Closed="Window_Closed"
     Icon="/assets/logo.png"
-    WindowStartupLocation="CenterScreen"
-    Closed="Window_Closed">
+    WindowStartupLocation="CenterScreen">
     <Grid>
-        <!-- Define two rows: one for the navigation bar, one for the content -->
+        <!--  Define two rows: one for the navigation bar, one for the content  -->
         <Grid.RowDefinitions>
-            <!-- Row for TitleBar -->
+            <!--  Row for TitleBar  -->
             <RowDefinition Height="Auto" />
-            <!-- Navigation Bar -->
             <RowDefinition Height="Auto" />
-            <!-- Content Area -->
+            <!--  Navigation Bar  -->
+            <RowDefinition Height="Auto" />
+            <!--  Content Area  -->
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <!-- TitleBar -->
+        <!--  TitleBar  -->
         <ui:TitleBar Title="Policy Explorer" Grid.Row="0" />
+        <Grid Grid.Row="1">
+            <!--  ProgressBar  -->
+            <ProgressBar
+                x:Name="ProgressBar"
+                Grid.Row="2"
+                Grid.ColumnSpan="5"
+                Height="5"
+                Margin="5"
+                VerticalAlignment="Top"
+                IsIndeterminate="True"
+                Visibility="Collapsed" />
+        </Grid>
 
-        <!-- Navigation Bar -->
-        <StackPanel Orientation="Horizontal" Grid.Row="1" VerticalAlignment="Top">
-            <!-- Back Button -->
-            <Button Margin="5" 
-            Click="BackButton_Click"
-            VerticalAlignment="Center" 
-            HorizontalAlignment="Left">
+        <!--  Navigation Bar  -->
+        <StackPanel
+            Grid.Row="2"
+            VerticalAlignment="Top"
+            Orientation="Horizontal">
+            <!--  Back Button  -->
+            <Button
+                Margin="5"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Click="BackButton_Click">
                 <ui:SymbolIcon Symbol="ArrowStepBack16" />
             </Button>
 
-            <!-- Menu -->
+            <!--  Menu  -->
             <Menu>
                 <MenuItem Header="File">
-                    <MenuItem Header="Exit" Click="ExitMenuItem_Click" />
+                    <MenuItem Click="ExitMenuItem_Click" Header="Exit" />
                 </MenuItem>
+                <Button
+                    x:Name="ImportButton"
+                    Click="ImportButton_Click"
+                    Content="Import PDF" />
             </Menu>
         </StackPanel>
 
-        <!-- Content Area with Resizable Columns -->
-        <Grid Grid.Row="2" Margin="3">
-            <!-- Define columns including GridSplitters -->
+        <!--  Content Area with Resizable Columns  -->
+        <Grid Grid.Row="3" Margin="3">
+            <!--  Define columns including GridSplitters  -->
             <Grid.ColumnDefinitions>
-                <!-- Column 0: Policy Explorer -->
+                <!--  Column 0: Policy Explorer  -->
                 <ColumnDefinition Width="1*" />
-                <!-- Column 1: GridSplitter -->
+                <!--  Column 1: GridSplitter  -->
                 <ColumnDefinition Width="5" />
-                <!-- Column 2: Display Content -->
+                <!--  Column 2: Display Content  -->
                 <ColumnDefinition Width="3*" />
-                <!-- Column 3: GridSplitter -->
+                <!--  Column 3: GridSplitter  -->
                 <ColumnDefinition Width="5" />
-                <!-- Column 4: Details -->
+                <!--  Column 4: Details  -->
                 <ColumnDefinition Width="2*" />
             </Grid.ColumnDefinitions>
 
-            <!-- First Column: Policy Explorer -->
+
+
+
+            <!--  First Column: Policy Explorer  -->
             <Grid Grid.Column="0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <!-- Navigation Bar -->
+                    <!--  Navigation Bar  -->
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
                 <Grid Grid.Row="0" Margin="10,0,0,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="15*"/>
-                        <ColumnDefinition Width="62*"/>
+                        <ColumnDefinition Width="15*" />
+                        <ColumnDefinition Width="62*" />
                     </Grid.ColumnDefinitions>
-                    <!-- Heading -->
+                    <!--  Heading  -->
                     <TextBlock
+                        Grid.ColumnSpan="2"
                         FontSize="16"
                         FontWeight="Bold"
-                        Text="Policy Explorer" Grid.ColumnSpan="2" />
+                        Text="Policy Explorer" />
                 </Grid>
 
                 <Grid Grid.Row="1">
-                    <TreeView
-                        x:Name="policyTreeView"
-                        BorderThickness="1">
-                        <!-- TreeViewItems will be added dynamically in code -->
+                    <TreeView x:Name="policyTreeView" BorderThickness="1">
+                        <!--  TreeViewItems will be added dynamically in code  -->
                     </TreeView>
                 </Grid>
             </Grid>
 
-            <!-- GridSplitter between Column 0 and Column 2 -->
+            <!--  GridSplitter between Column 0 and Column 2  -->
             <GridSplitter
                 Grid.Column="1"
                 Width="2"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
-                Background="Gray"
                 ResizeBehavior="PreviousAndNext"
                 ResizeDirection="Columns"
                 ShowsPreview="True" />
 
-            <!-- Second Column: Display Content -->
+            <!--  Second Column: Display Content  -->
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
-                    <!-- Location -->
+                    <!--  Location  -->
                     <RowDefinition Height="22" />
-                    <!-- Data Grid -->
+                    <!--  Data Grid  -->
                     <RowDefinition Height="4*" />
-                    <!-- GridSplitter -->
+                    <!--  GridSplitter  -->
                     <RowDefinition Height="5" />
-                    <!-- Log TextBox -->
+                    <!--  Log TextBox  -->
                     <RowDefinition Height="*" />
-                    <!-- Buttons -->
+                    <!--  Buttons  -->
                     <RowDefinition Height="50" />
                 </Grid.RowDefinitions>
 
-                <!-- Navigation TextBlock -->
+                <!--  Navigation TextBlock  -->
                 <Grid Grid.Row="0">
                     <TextBlock
                         x:Name="navigationTextBlock"
@@ -121,7 +143,7 @@
                         Text="Path" />
                 </Grid>
 
-                <!-- DataGrid -->
+                <!--  DataGrid  -->
                 <DataGrid
                     x:Name="myDataGrid"
                     Grid.Row="1"
@@ -132,21 +154,21 @@
                     IsReadOnly="False"
                     SelectionMode="Extended">
                     <DataGrid.Columns>
-                        <DataGridCheckBoxColumn 
-                            Width="1*" 
-                            Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                        <DataGridCheckBoxColumn
+                            Width="1*"
+                            Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                             IsReadOnly="False">
                             <DataGridCheckBoxColumn.Header>
-                                <CheckBox 
-                                    x:Name="SelectAllCheckBox" 
-                                    Click="SelectAllCheckBox_Click" 
-                                    Content="All" 
-                                    Padding="15"
-                                    FontSize="1"
+                                <CheckBox
+                                    x:Name="SelectAllCheckBox"
                                     MaxWidth="1"
-                                    MaxHeight="1"/>
+                                    MaxHeight="1"
+                                    Padding="15"
+                                    Click="SelectAllCheckBox_Click"
+                                    Content="All"
+                                    FontSize="1" />
                             </DataGridCheckBoxColumn.Header>
-                            <!-- CellStyle for smaller CheckBox column -->
+                            <!--  CellStyle for smaller CheckBox column  -->
                             <DataGridCheckBoxColumn.CellStyle>
                                 <Style TargetType="DataGridCell">
                                     <Setter Property="VerticalAlignment" Value="Center" />
@@ -154,14 +176,14 @@
                                         <Setter.Value>
                                             <ControlTemplate TargetType="DataGridCell">
                                                 <Grid>
-                                                    <CheckBox 
-                                IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                                VerticalAlignment="Center" 
-                                HorizontalAlignment="Center" 
-                                FontSize="5" 
-                                Padding="2"
-                                Width="5"
-                                Height="5" />
+                                                    <CheckBox
+                                                        Width="5"
+                                                        Height="5"
+                                                        Padding="2"
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        FontSize="5"
+                                                        IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                                 </Grid>
                                             </ControlTemplate>
                                         </Setter.Value>
@@ -173,91 +195,91 @@
 
 
                         <DataGridTextColumn
-                        Width="1.1*"
-                        Binding="{Binding ID}"
-                        Header="ID"
-                        IsReadOnly="True">
-                        <!-- CellStyle for ID column -->
-                        <DataGridTextColumn.CellStyle>
-                            <Style TargetType="DataGridCell">
+                            Width="1.1*"
+                            Binding="{Binding ID}"
+                            Header="ID"
+                            IsReadOnly="True">
+                            <!--  CellStyle for ID column  -->
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell">
                                     <Setter Property="VerticalAlignment" Value="Center" />
                                 </Style>
-                        </DataGridTextColumn.CellStyle>
-                    </DataGridTextColumn>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
 
-                    <DataGridTextColumn
-                        Width="1*"
-                        Binding="{Binding Profile}"
-                        Header="Profile"
-                        IsReadOnly="True">
-                        <!-- CellStyle for Profile column -->
-                        <DataGridTextColumn.CellStyle>
-                            <Style TargetType="DataGridCell">
-                                <Setter Property="VerticalAlignment" Value="Center" />
-                            </Style>
-                        </DataGridTextColumn.CellStyle>
-                    </DataGridTextColumn>
+                        <DataGridTextColumn
+                            Width="1*"
+                            Binding="{Binding Profile}"
+                            Header="Profile"
+                            IsReadOnly="True">
+                            <!--  CellStyle for Profile column  -->
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
 
-                    <DataGridTextColumn
-                        Width="4*"
-                        Binding="{Binding Name}"
-                        Header="Name"
-                        IsReadOnly="True">
-                        <!-- CellStyle for Name column -->
-                        <DataGridTextColumn.CellStyle>
-                            <Style TargetType="DataGridCell">
-                                <Setter Property="VerticalAlignment" Value="Center" />
-                            </Style>
-                        </DataGridTextColumn.CellStyle>
-                    </DataGridTextColumn>
+                        <DataGridTextColumn
+                            Width="4*"
+                            Binding="{Binding Name}"
+                            Header="Name"
+                            IsReadOnly="True">
+                            <!--  CellStyle for Name column  -->
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
 
-                    <DataGridTextColumn
-                        Width="1*"
-                        Binding="{Binding Current}"
-                        Header="Current"
-                        IsReadOnly="True">
-                        <!-- CellStyle for Current column -->
-                        <DataGridTextColumn.CellStyle>
-                            <Style TargetType="DataGridCell">
-                                <Setter Property="VerticalAlignment" Value="Center" />
-                            </Style>
-                        </DataGridTextColumn.CellStyle>
-                    </DataGridTextColumn>
+                        <DataGridTextColumn
+                            Width="1*"
+                            Binding="{Binding Current}"
+                            Header="Current"
+                            IsReadOnly="True">
+                            <!--  CellStyle for Current column  -->
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
 
-                    <DataGridTextColumn
-                        Width="1*"
-                        Binding="{Binding Status}"
-                        Header="Status"
-                        IsReadOnly="True">
-                        <!-- Apply CellStyle for Status column -->
-                        <DataGridTextColumn.CellStyle>
-                            <Style TargetType="DataGridCell">
-                                <Setter Property="VerticalAlignment" Value="Center" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Status}" Value="Fail">
-                                        <Setter Property="Background" Value="LightCoral" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Status}" Value="Pass">
-                                        <Setter Property="Background" Value="LightGreen" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Status}" Value="Not Defined">
-                                        <Setter Property="Background" Value="LightYellow" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Status}" Value="Error">
-                                        <Setter Property="Background" Value="LightGray" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </DataGridTextColumn.CellStyle>
-                    </DataGridTextColumn>
-                </DataGrid.Columns>
+                        <DataGridTextColumn
+                            Width="1*"
+                            Binding="{Binding Status}"
+                            Header="Status"
+                            IsReadOnly="True">
+                            <!--  Apply CellStyle for Status column  -->
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Status}" Value="Fail">
+                                            <Setter Property="Background" Value="LightCoral" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Status}" Value="Pass">
+                                            <Setter Property="Background" Value="LightGreen" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Status}" Value="Not Defined">
+                                            <Setter Property="Background" Value="LightYellow" />
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Status}" Value="Error">
+                                            <Setter Property="Background" Value="LightGray" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
 
 
-                    <!-- Remove RowStyle to prevent entire row coloring -->
-                    <!-- If you have other RowStyles, ensure they don't interfere -->
+                    <!--  Remove RowStyle to prevent entire row coloring  -->
+                    <!--  If you have other RowStyles, ensure they don't interfere  -->
                 </DataGrid>
 
-                <!-- GridSplitter between DataGrid and Log TextBox -->
+                <!--  GridSplitter between DataGrid and Log TextBox  -->
                 <GridSplitter
                     Grid.Row="2"
                     Height="2"
@@ -267,17 +289,17 @@
                     ResizeDirection="Rows"
                     ShowsPreview="True" />
 
-                <!-- Log TextBox -->
+                <!--  Log TextBox  -->
                 <Grid Grid.Row="3" Margin="5,5,5,5">
                     <Grid.RowDefinitions>
-                        <!-- Heading -->
+                        <!--  Heading  -->
                         <RowDefinition Height="Auto" />
-                        <!-- Content Area -->
+                        <!--  Content Area  -->
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
                     <Grid Grid.Row="0" Margin="10,0,0,0">
-                        <!-- Heading -->
+                        <!--  Heading  -->
                         <TextBlock
                             Margin="0,0,0,0"
                             FontSize="16"
@@ -298,8 +320,11 @@
                     </Grid>
                 </Grid>
 
-                <!-- Buttons -->
-                <Grid Grid.Row="4" Margin="5,5,5,5" HorizontalAlignment="Center">
+                <!--  Buttons  -->
+                <Grid
+                    Grid.Row="4"
+                    Margin="5,5,5,5"
+                    HorizontalAlignment="Center">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
@@ -310,7 +335,7 @@
                         <ColumnDefinition Width="2*" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- Buttons -->
+                    <!--  Buttons  -->
                     <Button
                         x:Name="AuditButton"
                         Grid.Column="0"
@@ -355,7 +380,7 @@
                         Click="EditButton_Click"
                         Content="Edit" />
 
-                    <!-- Revert Button -->
+                    <!--  Revert Button  -->
                     <Button
                         x:Name="RevertButton"
                         Grid.Column="5"
@@ -375,7 +400,7 @@
                 </Grid>
             </Grid>
 
-            <!-- GridSplitter between Column 2 and Column 4 -->
+            <!--  GridSplitter between Column 2 and Column 4  -->
             <GridSplitter
                 Grid.Column="3"
                 Width="2"
@@ -385,7 +410,7 @@
                 ResizeDirection="Columns"
                 ShowsPreview="True" />
 
-            <!-- Third Column: Detail Section -->
+            <!--  Third Column: Detail Section  -->
             <Border
                 Grid.Column="4"
                 Padding="10"
@@ -393,14 +418,14 @@
                 CornerRadius="5">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <!-- Heading -->
+                        <!--  Heading  -->
                         <TextBlock
                             Margin="0,0,0,10"
                             FontSize="16"
                             FontWeight="Bold"
                             Text="Details" />
 
-                        <!-- Content -->
+                        <!--  Content  -->
                         <TextBlock
                             x:Name="detailsTextBlock"
                             FontFamily="Consolas"

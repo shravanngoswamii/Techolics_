@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Threading;
+using System.Xml.Linq;
 using Techolics_.Logging;
 using Techolics_.PolicyManagement;
 using Wpf.Ui.Appearance;
@@ -537,6 +538,122 @@ namespace Techolics_
         }
         private void myDataGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
+
+        }
+
+        private async void ImportButton_Click(object sender, RoutedEventArgs e)
+        {
+            ProgressBar.Visibility = Visibility.Visible; // Show the progress bar
+
+            try
+            {
+                var openFileDialog = new Microsoft.Win32.OpenFileDialog
+                {
+                    Filter = "PDF files (*.pdf)|*.pdf|All files (*.*)|*.*",
+                    Title = "Select PDF File to Import"
+                };
+
+                if (openFileDialog.ShowDialog() == true)
+                {
+                    string pdfFilePath = openFileDialog.FileName;
+
+                    try
+                    {
+                        // Define the Python script and arguments
+                        string pythonScript = @"C:\Users\shrav\Desktop\pdf\Techolics_\data\script.py"; // Update this path
+                        string arguments = $"\"{pythonScript}\" \"{pdfFilePath}\"";
+
+                        var process = new System.Diagnostics.Process
+                        {
+                            StartInfo = new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = "python",
+                                Arguments = arguments,
+                                RedirectStandardOutput = true,
+                                RedirectStandardError = true,
+                                UseShellExecute = false,
+                                CreateNoWindow = true
+                            }
+                        };
+
+                        process.Start();
+
+                        string output = await process.StandardOutput.ReadToEndAsync();
+                        string error = await process.StandardError.ReadToEndAsync();
+                        process.WaitForExit();
+
+                        if (process.ExitCode != 0)
+                        {
+                            var messageBox = new Wpf.Ui.Controls.MessageBox
+                            {
+                                Title = "Error",
+                                Content = $"Error processing PDF: {error}",
+                                CloseButtonText = "OK",
+                            };
+                            await messageBox.ShowDialogAsync();
+                            return;
+                        }
+
+                        string generatedXmlPath = @"C:\Users\shrav\Desktop\pdf\Techolics_\data\policies.xml"; // Update this path
+                        LoadGeneratedXml(generatedXmlPath);
+
+                        var successMessageBox = new Wpf.Ui.Controls.MessageBox
+                        {
+                            Title = "Success",
+                            Content = "PDF imported successfully!",
+                            CloseButtonText = "OK",
+                        };
+                        await successMessageBox.ShowDialogAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        var errorBox = new Wpf.Ui.Controls.MessageBox
+                        {
+                            Title = "Error",
+                            Content = $"An error occurred: {ex.Message}",
+                            CloseButtonText = "OK",
+                        };
+                        await errorBox.ShowDialogAsync();
+                    }
+                }
+            }
+            finally
+            {
+                ProgressBar.Visibility = Visibility.Collapsed; // Hide the progress bar
+            }
+        }
+        private void LoadGeneratedXml(string xmlPath)
+        {
+            // Logic to parse the XML and load it into the UI
+        }
+
+
+        private void LoadGeneratedXmlFromPolicy(string xmlPath)
+        {
+            // Parse the XML file
+            var doc = XDocument.Load(xmlPath);
+
+            // Example: Update TreeView or DataGrid based on the parsed XML
+            foreach (var policy in doc.Descendants("Policy"))
+            {
+                var item = new Item
+                {
+                    ID = policy.Attribute("id")?.Value,
+                    Name = policy.Element("Documentation")?.Element("Title")?.Value,
+                    // Populate other fields as needed
+                };
+
+                Items.Add(item); // Add to ObservableCollection
+            }
+
+            myDataGrid.Items.Refresh(); // Refresh the DataGrid
+        }
+
+
+
+        private void ExportMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            // Logic for exporting data
 
         }
     }
