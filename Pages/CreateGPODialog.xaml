@@ -1,0 +1,33 @@
+<ui:FluentWindow
+    x:Class="Techolics_.Pages.CreateGPODialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    Title="Create GPO"
+    Width="400"
+    Height="300"
+    WindowStartupLocation="CenterOwner">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="GPO Name (Optional):" Margin="0,0,0,5"/>
+        <TextBox Grid.Row="1" x:Name="GPONameTextBox" Margin="0,0,0,10"/>
+
+        <TextBlock Grid.Row="2" Text="Description (Optional):" Margin="0,0,0,5"/>
+        <TextBox Grid.Row="3" x:Name="DescriptionTextBox" TextWrapping="Wrap" AcceptsReturn="True" Margin="0,0,0,10"/>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="BrowseButton" Content="Browse Location" Click="BrowseButton_Click" Margin="0,0,10,0"/>
+            <Button x:Name="OKButton" Content="OK" Click="OKButton_Click" Margin="0,0,10,0"/>
+            <Button x:Name="CancelButton" Content="Cancel" Click="CancelButton_Click"/>
+        </StackPanel>
+    </Grid>
+</ui:FluentWindow>

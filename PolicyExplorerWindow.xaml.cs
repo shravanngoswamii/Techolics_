@@ -298,12 +298,76 @@ namespace Techolics_
             {
                 Console.WriteLine($"Error navigating back: {ex.Message}");
             }
-
         }
 
         private void myDataGrid_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
+        }
 
+        private async void CreateGPOButton_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedItems = logic.GetSelectedItems();
+            if (selectedItems.Count == 0)
+            {
+                var messageBox = new WpfMessageBox
+                {
+                    Title = "No Policies Selected",
+                    Content = "Please select at least one policy to create GPO.",
+                    CloseButtonText = "Close",
+                };
+                await messageBox.ShowDialogAsync();
+                return;
+            }
+
+            var dialog = new CreateGPODialog();
+            dialog.Owner = this;
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var gpoName = string.IsNullOrEmpty(dialog.GPOName) ? $"GPO_{DateTime.Now:yyyyMMdd_HHmmss}" : dialog.GPOName;
+                    var creator = new GPOCreator(dialog.SaveLocation, gpoName, dialog.Description);
+                    creator.CreateGPOStructure();
+
+                    var registryPolicies = selectedItems
+                        .Where(i => i.Policy?.Implementation?.Registry != null)
+                        .Select(i => i.Policy)
+                        .ToList();
+
+                    var seceditPolicies = selectedItems
+                        .Where(i => i.Policy?.Implementation?.Secedit != null)
+                        .Select(i => i.Policy)
+                        .ToList();
+
+                    if (registryPolicies.Any())
+                    {
+                        creator.AddRegistryPolicies(registryPolicies);
+                    }
+
+                    if (seceditPolicies.Any())
+                    {
+                        creator.AddSeceditPolicies(seceditPolicies);
+                    }
+
+                    var messageBox = new WpfMessageBox
+                    {
+                        Title = "Success",
+                        Content = $"GPO '{gpoName}' created successfully at {dialog.SaveLocation}",
+                        CloseButtonText = "OK",
+                    };
+                    await messageBox.ShowDialogAsync();
+                }
+                catch (Exception ex)
+                {
+                    var messageBox = new WpfMessageBox
+                    {
+                        Title = "Error",
+                        Content = $"Failed to create GPO: {ex.Message}",
+                        CloseButtonText = "OK",
+                    };
+                    await messageBox.ShowDialogAsync();
+                }
+            }
         }
     }
 }
