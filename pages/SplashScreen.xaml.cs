@@ -2,10 +2,10 @@
 using System.Windows;
 using System.Windows.Threading;
 using Wpf.Ui.Appearance;
-
+using Wpf.Ui.Controls;
 namespace Techolics_.pages
 {
-    public partial class SplashScreen : Window
+    public partial class SplashScreen : FluentWindow
     {
         private string _textToType = "Techolics_";
         private int _currentIndex = 0;
