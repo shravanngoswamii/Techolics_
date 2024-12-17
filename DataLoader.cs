@@ -1,17 +1,20 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using System.Xml.Serialization;
 
 namespace Techolics_
 {
     public class DataLoader
     {
-        public CISBenchmark LoadBenchmarkValues(string filePath)
+        public CISBenchmark LoadBenchmarkValues(string resourceName)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(CISBenchmark));
-            using (FileStream fs = new FileStream(filePath, FileMode.Open))
+
+            // Load the XML content from the embedded resource
+            using (var stream = GetResourceStream(resourceName))
             {
-                var result = serializer.Deserialize(fs) as CISBenchmark;
+                var result = serializer.Deserialize(stream) as CISBenchmark;
                 if (result == null)
                 {
                     throw new InvalidOperationException("Deserialization returned null.");
@@ -20,18 +23,34 @@ namespace Techolics_
             }
         }
 
-        public CISBenchmarkDocumentation LoadBenchmarkDocumentation(string filePath)
+        public CISBenchmarkDocumentation LoadBenchmarkDocumentation(string resourceName)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(CISBenchmarkDocumentation));
-            using (FileStream fs = new FileStream(filePath, FileMode.Open))
+
+            // Load the XML content from the embedded resource
+            using (var stream = GetResourceStream(resourceName))
             {
-                var result = serializer.Deserialize(fs) as CISBenchmarkDocumentation;
+                var result = serializer.Deserialize(stream) as CISBenchmarkDocumentation;
                 if (result == null)
                 {
                     throw new InvalidOperationException("Deserialization returned null.");
                 }
                 return result;
             }
+        }
+
+        private Stream GetResourceStream(string resourceName)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            var resourcePath = $"{assembly.GetName().Name}.{resourceName.Replace('/', '.')}"; // Format for embedded resource
+
+            var stream = assembly.GetManifestResourceStream(resourcePath);
+            if (stream == null)
+            {
+                throw new FileNotFoundException($"Resource not found: {resourcePath}");
+            }
+
+            return stream;
         }
     }
 }

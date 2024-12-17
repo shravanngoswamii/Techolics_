@@ -45,6 +45,7 @@ namespace Techolics_.pages
             Application.Current.MainWindow = mainWindow;
 
             mainWindow.Show();
+
             this.Close();
         }
     }

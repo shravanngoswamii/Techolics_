@@ -1,62 +1,63 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
-    <PublishSingleFile>true</PublishSingleFile> <!-- Enable single file publishing -->
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier> <!-- Specify the target platform -->
-    <SelfContained>true</SelfContained> <!-- Optional: Make the app self-contained (includes .NET runtime) -->
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UseWPF>true</UseWPF>
+		<PublishSingleFile>true</PublishSingleFile>
+		<!-- Enable single file publishing -->
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		<!-- Specify the target platform -->
+		<SelfContained>true</SelfContained>
+		<!-- Optional: Make the app self-contained (includes .NET runtime) -->
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="assets\add.png" />
-    <None Remove="assets\logo.png" />
-    <None Remove="assets\remove.png" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="assets\add.png" />
+		<None Remove="assets\logo.png" />
+		<None Remove="assets\remove.png" />
+		<None Remove="data\SIDMappings.xml" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Page Remove="data\CIS_Benchmark_Documentation.xaml" />
-    <Page Remove="data\CIS_Benchmark_Values.xaml" />
-  </ItemGroup>
+	<ItemGroup>
+		<Page Remove="data\CIS_Benchmark_Documentation.xaml" />
+		<Page Remove="data\CIS_Benchmark_Values.xaml" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Include="data\CIS_Benchmark_Documentation.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="data\CIS_Benchmark_Values.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="data\CIS_Benchmark_Documentation.xaml">
+			<Generator>MSBuild:Compile</Generator>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</EmbeddedResource>
+		<EmbeddedResource Include="data\CIS_Benchmark_Values.xaml">
+			<Generator>MSBuild:Compile</Generator>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</EmbeddedResource>
+		<EmbeddedResource Include="data\SIDMappings.xml">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</EmbeddedResource>
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Extended.Wpf.Toolkit" Version="4.6.1" />
-    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.4.6" />
-    <PackageReference Include="Microsoft.WindowsAPICodePack.Core" Version="1.1.0" />
-    <PackageReference Include="Microsoft.WindowsAPICodePack.Shell" Version="1.1.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="System.Management" Version="9.0.0" />
-    <PackageReference Include="WPF-UI" Version="3.0.5" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Extended.Wpf.Toolkit" Version="4.6.1" />
+		<PackageReference Include="Microsoft.PowerShell.SDK" Version="7.4.6" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="System.Management" Version="9.0.0" />
+		<PackageReference Include="WPF-UI" Version="3.0.5" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Resource Include="assets\add.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="assets\logo.png" />
-    <Resource Include="assets\remove.png">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="data\SIDMappings.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+		<Resource Include="assets\add.png">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="assets\logo.png">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="assets\remove.png">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</Resource>
+	</ItemGroup>
 
 </Project>

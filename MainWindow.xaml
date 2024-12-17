@@ -5,7 +5,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="mc"
     x:Class="Techolics_.MainWindow"
-    Title="Dashboard"
+    Title="Dashboard - Techolics_"
     Icon="/Assets/logo.png"
     WindowStartupLocation="CenterScreen"
     Width="1100"
@@ -27,7 +27,13 @@
     </Window.Resources>
 
     <Grid>
-        <ui:TitleBar Title="Techolics_" DockPanel.Dock="Top" />
+        <!--  TitleBar  -->
+        <ui:TitleBar Title="Dashboard - Techolics_" Grid.Row="0" DockPanel.Dock="Top">
+            <ui:TitleBar.Icon>
+                <ui:ImageIcon Margin="0,0,-5,0" Height="15" Source="pack://application:,,,/Assets/logo.png" />
+            </ui:TitleBar.Icon>
+        </ui:TitleBar>
+        
         <DockPanel LastChildFill="True" Margin="15,40,15,20">
             <Grid Margin="0" DockPanel.Dock="Top">
                 <Grid.RowDefinitions>

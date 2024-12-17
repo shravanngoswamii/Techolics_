@@ -1,4 +1,4 @@
-﻿<!-- EditPolicyWindow.xaml remains unchanged -->
+﻿<!--  EditPolicyWindow.xaml remains unchanged  -->
 <ui:FluentWindow
     x:Class="Techolics_.Pages.EditPolicyWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -8,74 +8,89 @@
     Width="600"
     Height="400"
     WindowStartupLocation="CenterOwner">
-    <Grid Margin="10">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <!-- Policy Name -->
             <RowDefinition Height="Auto" />
-            <!-- Default Value -->
+            <!--  Policy Name  -->
             <RowDefinition Height="Auto" />
-            <!-- CIS Recommended Values -->
+            <!--  Default Value  -->
+            <RowDefinition Height="Auto" />
+            <!--  CIS Recommended Values  -->
             <RowDefinition Height="*" />
-            <!-- Input based on ValueType -->
+            <!--  Input based on ValueType  -->
             <RowDefinition Height="Auto" />
-            <!-- Buttons -->
+            <!--  Buttons  -->
         </Grid.RowDefinitions>
 
-        <!-- Policy Name (Read-only) -->
-        <StackPanel
+
+        <!--  TitleBar  -->
+        <ui:TitleBar
+            Title="Edit Policy"
             Grid.Row="0"
-            Margin="0,0,0,10"
+            DockPanel.Dock="Top">
+            <ui:TitleBar.Icon>
+                <ui:ImageIcon
+                    Height="15"
+                    Margin="0,0,-5,0"
+                    Source="pack://application:,,,/Assets/logo.png" />
+            </ui:TitleBar.Icon>
+        </ui:TitleBar>
+
+        <!--  Policy Name (Read-only)  -->
+        <StackPanel
+            Grid.Row="1"
+            Margin="10"
             Orientation="Horizontal">
             <TextBlock
                 Width="120"
                 VerticalAlignment="Center"
-                Text="Policy Name:" />
+                Text="Policy Name: " />
             <TextBlock
                 x:Name="PolicyNameTextBlock"
                 VerticalAlignment="Center"
                 FontWeight="Bold" />
         </StackPanel>
 
-        <!-- Default Value -->
+        <!--  Default Value  -->
         <StackPanel
-            Grid.Row="1"
-            Margin="0,0,0,10"
+            Grid.Row="2"
+            Margin="10"
             Orientation="Horizontal">
             <TextBlock
                 Width="120"
                 VerticalAlignment="Center"
-                Text="Default Value:" />
+                Text="Default Value: " />
             <TextBlock x:Name="DefaultValueTextBlock" VerticalAlignment="Center" />
         </StackPanel>
 
-        <!-- CIS Recommended Value -->
+        <!--  CIS Recommended Value  -->
         <StackPanel
-            Grid.Row="2"
-            Margin="0,0,0,10"
+            Grid.Row="3"
+            Margin="10"
             Orientation="Horizontal">
             <TextBlock
                 Width="120"
                 VerticalAlignment="Center"
-                Text="CIS Recommended:" />
+                Text="CIS Recommended: " />
             <TextBlock x:Name="CISRecommendedTextBlock" VerticalAlignment="Center" />
         </StackPanel>
 
-        <!-- Dynamic Input Area -->
-        <Grid Grid.Row="3">
-            <!-- We'll use a Grid with multiple child controls and show/hide them depending on ValueType -->
+        <!--  Dynamic Input Area  -->
+        <Grid Grid.Row="4" Margin="10">
+            <!--  We'll use a Grid with multiple child controls and show/hide them depending on ValueType  -->
             <Grid x:Name="IntegerPanel" Visibility="Collapsed">
-                <StackPanel Orientation="Horizontal" Margin="10">
+                <StackPanel Margin="10" Orientation="Horizontal">
                     <TextBlock
                         Width="150"
+                        Margin="0,0,10,0"
                         VerticalAlignment="Center"
-                        Text="Enter Integer Value:"
-                        Margin="0,0,10,0" />
+                        Text="Enter Integer Value:" />
                     <TextBox
                         x:Name="IntegerTextBox"
                         Width="100"
-                        VerticalAlignment="Center"
-                        HorizontalAlignment="Left" />
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center" />
                 </StackPanel>
             </Grid>
 
@@ -100,13 +115,13 @@
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Left List (Available Users) -->
+                <!--  Left List (Available Users)  -->
                 <ListBox
                     x:Name="AvailableUsersListBox"
                     Grid.Column="0"
                     SelectionMode="Extended" />
 
-                <!-- Buttons -->
+                <!--  Buttons  -->
                 <StackPanel
                     Grid.Column="1"
                     HorizontalAlignment="Center"
@@ -126,7 +141,7 @@
                         Content="←" />
                 </StackPanel>
 
-                <!-- Right List (Selected Users) -->
+                <!--  Right List (Selected Users)  -->
                 <ListBox
                     x:Name="SelectedUsersListBox"
                     Grid.Column="2"
@@ -134,9 +149,10 @@
             </Grid>
         </Grid>
 
-        <!-- Buttons -->
+        <!--  Buttons  -->
         <StackPanel
-            Grid.Row="4"
+            Grid.Row="5"
+            Margin="10"
             HorizontalAlignment="Right"
             Orientation="Horizontal">
             <Button

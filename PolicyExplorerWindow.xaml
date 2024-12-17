@@ -1,4 +1,4 @@
-﻿<!-- PolicyExplorerWindow.xaml -->
+﻿<!--  PolicyExplorerWindow.xaml  -->
 <ui:FluentWindow
     x:Class="Techolics_.PolicyExplorerWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -11,36 +11,40 @@
     Icon="/assets/logo.png"
     WindowStartupLocation="CenterScreen">
 
-    <!-- Define Resources -->
+    <!--  Define Resources  -->
     <ui:FluentWindow.Resources>
-        <!-- Style for TextBox with PreviewTextInput EventSetter -->
+        <!--  Style for TextBox with PreviewTextInput EventSetter  -->
         <Style x:Key="IntegerTextBoxStyle" TargetType="TextBox">
             <EventSetter Event="PreviewTextInput" Handler="IntegerTextBox_PreviewTextInput" />
         </Style>
 
-        <!-- Style for Edit Button with Click EventSetter -->
+        <!--  Style for Edit Button with Click EventSetter  -->
         <Style x:Key="EditButtonStyle" TargetType="Button">
             <EventSetter Event="Click" Handler="EditCustomValueButton_Click" />
         </Style>
     </ui:FluentWindow.Resources>
 
     <Grid>
-        <!-- Define four rows: TitleBar, ProgressBar, Navigation Bar, Content Area -->
+        <!--  Define four rows: TitleBar, ProgressBar, Navigation Bar, Content Area  -->
         <Grid.RowDefinitions>
-            <!-- Row for TitleBar -->
+            <!--  Row for TitleBar  -->
             <RowDefinition Height="Auto" />
-            <!-- Row for ProgressBar -->
+            <!--  Row for ProgressBar  -->
             <RowDefinition Height="Auto" />
-            <!-- Navigation Bar -->
+            <!--  Navigation Bar  -->
             <RowDefinition Height="Auto" />
-            <!-- Content Area -->
+            <!--  Content Area  -->
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- TitleBar -->
-        <ui:TitleBar Title="Policy Explorer" Grid.Row="0" />
+        <!--  TitleBar  -->
+        <ui:TitleBar Title="Policy Explorer - Techolics_" Grid.Row="0" DockPanel.Dock="Top">
+            <ui:TitleBar.Icon>
+                <ui:ImageIcon Margin="0,0,-5,0" Height="15" Source="pack://application:,,,/Assets/logo.png" />
+            </ui:TitleBar.Icon>
+        </ui:TitleBar>
 
-        <!-- ProgressBar -->
+        <!--  ProgressBar  -->
         <ProgressBar
             x:Name="ProgressBar"
             Grid.Row="1"
@@ -50,52 +54,53 @@
             IsIndeterminate="True"
             Visibility="Collapsed" />
 
-        <!-- Navigation Bar -->
+        <!--  Navigation Bar  -->
         <StackPanel
             Grid.Row="2"
             VerticalAlignment="Top"
             Orientation="Horizontal">
-            <!-- Back Button -->
+            <!--  Back Button  -->
             <Button
                 Margin="5"
                 HorizontalAlignment="Left"
                 VerticalAlignment="Center"
-                Click="BackButton_Click">
+                Click="BackButton_Click"
+                ToolTipService.ToolTip="Go Back">
                 <ui:SymbolIcon Symbol="ArrowStepBack16" />
             </Button>
 
-            <!-- Menu -->
+            <!--  Menu  -->
             <Menu>
                 <MenuItem Header="File">
                     <MenuItem Click="ExitMenuItem_Click" Header="Exit" />
                 </MenuItem>
             </Menu>
 
-            <!-- Import PDF Button -->
+            <!--  Import PDF Button  -->
             <Button
                 x:Name="ImportButton"
+                Margin="10,0,0,0"
                 Click="ImportButton_Click"
-                Content="Import PDF"
-                Margin="10,0,0,0" />
+                Content="Import PDF" />
         </StackPanel>
 
-        <!-- Content Area with Resizable Columns -->
+        <!--  Content Area with Resizable Columns  -->
         <Grid Grid.Row="3" Margin="3">
-            <!-- Define columns including GridSplitters -->
+            <!--  Define columns including GridSplitters  -->
             <Grid.ColumnDefinitions>
-                <!-- Column 0: Policy Explorer -->
+                <!--  Column 0: Policy Explorer  -->
                 <ColumnDefinition Width="1*" />
-                <!-- Column 1: GridSplitter -->
+                <!--  Column 1: GridSplitter  -->
                 <ColumnDefinition Width="5" />
-                <!-- Column 2: Display Content -->
+                <!--  Column 2: Display Content  -->
                 <ColumnDefinition Width="3*" />
-                <!-- Column 3: GridSplitter -->
+                <!--  Column 3: GridSplitter  -->
                 <ColumnDefinition Width="5" />
-                <!-- Column 4: Details Section -->
+                <!--  Column 4: Details Section  -->
                 <ColumnDefinition Width="2*" />
             </Grid.ColumnDefinitions>
 
-            <!-- First Column: Policy Explorer -->
+            <!--  First Column: Policy Explorer  -->
             <Grid Grid.Column="0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -107,7 +112,7 @@
                         <ColumnDefinition Width="15*" />
                         <ColumnDefinition Width="62*" />
                     </Grid.ColumnDefinitions>
-                    <!-- Heading -->
+                    <!--  Heading  -->
                     <TextBlock
                         Grid.ColumnSpan="2"
                         FontSize="16"
@@ -117,12 +122,12 @@
 
                 <Grid Grid.Row="1">
                     <TreeView x:Name="policyTreeView" BorderThickness="1">
-                        <!-- TreeViewItems will be added dynamically in code -->
+                        <!--  TreeViewItems will be added dynamically in code  -->
                     </TreeView>
                 </Grid>
             </Grid>
 
-            <!-- GridSplitter between Column 0 and Column 2 -->
+            <!--  GridSplitter between Column 0 and Column 2  -->
             <GridSplitter
                 Grid.Column="1"
                 Width="2"
@@ -132,22 +137,22 @@
                 ResizeDirection="Columns"
                 ShowsPreview="True" />
 
-            <!-- Second Column: Display Content -->
+            <!--  Second Column: Display Content  -->
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
-                    <!-- Navigation TextBlock -->
+                    <!--  Navigation TextBlock  -->
                     <RowDefinition Height="22" />
-                    <!-- Data Grid -->
+                    <!--  Data Grid  -->
                     <RowDefinition Height="4*" />
-                    <!-- GridSplitter -->
+                    <!--  GridSplitter  -->
                     <RowDefinition Height="5" />
-                    <!-- Log TextBox -->
+                    <!--  Log TextBox  -->
                     <RowDefinition Height="*" />
-                    <!-- Buttons -->
+                    <!--  Buttons  -->
                     <RowDefinition Height="50" />
                 </Grid.RowDefinitions>
 
-                <!-- Navigation TextBlock -->
+                <!--  Navigation TextBlock  -->
                 <Grid Grid.Row="0">
                     <TextBlock
                         x:Name="navigationTextBlock"
@@ -157,7 +162,7 @@
                         Text="Path" />
                 </Grid>
 
-                <!-- DataGrid -->
+                <!--  DataGrid  -->
                 <DataGrid
                     x:Name="myDataGrid"
                     Grid.Row="1"
@@ -166,10 +171,10 @@
                     CanUserAddRows="False"
                     HeadersVisibility="Column"
                     IsReadOnly="False"
-                    SelectionMode="Extended"
-                    SelectionChanged="myDataGrid_SelectionChanged_1">
+                    SelectionChanged="myDataGrid_SelectionChanged_1"
+                    SelectionMode="Extended">
                     <DataGrid.Columns>
-                        <!-- Selection CheckBox Column -->
+                        <!--  Selection CheckBox Column  -->
                         <DataGridCheckBoxColumn
                             Width="1*"
                             Binding="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -184,7 +189,7 @@
                                     Content="All"
                                     FontSize="1" />
                             </DataGridCheckBoxColumn.Header>
-                            <!-- CellStyle for smaller CheckBox column -->
+                            <!--  CellStyle for smaller CheckBox column  -->
                             <DataGridCheckBoxColumn.CellStyle>
                                 <Style TargetType="DataGridCell">
                                     <Setter Property="VerticalAlignment" Value="Center" />
@@ -208,41 +213,41 @@
                             </DataGridCheckBoxColumn.CellStyle>
                         </DataGridCheckBoxColumn>
 
-                        <!-- ID Column -->
+                        <!--  ID Column  -->
                         <DataGridTextColumn
                             Width="1.1*"
                             Binding="{Binding ID}"
                             Header="ID"
                             IsReadOnly="True" />
 
-                        <!-- Profile Column -->
+                        <!--  Profile Column  -->
                         <DataGridTextColumn
                             Width="1*"
                             Binding="{Binding Profile}"
                             Header="Profile"
                             IsReadOnly="True" />
 
-                        <!-- Name Column -->
+                        <!--  Name Column  -->
                         <DataGridTextColumn
                             Width="4*"
                             Binding="{Binding Name}"
                             Header="Name"
                             IsReadOnly="True" />
 
-                        <!-- Current Column -->
+                        <!--  Current Column  -->
                         <DataGridTextColumn
                             Width="1*"
                             Binding="{Binding Current}"
                             Header="Current"
                             IsReadOnly="True" />
 
-                        <!-- Status Column -->
+                        <!--  Status Column  -->
                         <DataGridTextColumn
                             Width="1*"
                             Binding="{Binding Status}"
                             Header="Status"
                             IsReadOnly="True">
-                            <!-- Apply CellStyle for Status column -->
+                            <!--  Apply CellStyle for Status column  -->
                             <DataGridTextColumn.CellStyle>
                                 <Style TargetType="DataGridCell">
                                     <Style.Triggers>
@@ -263,11 +268,11 @@
                             </DataGridTextColumn.CellStyle>
                         </DataGridTextColumn>
 
-                        <!-- New CustomValue Column (Initially Hidden) -->
+                        <!--  New CustomValue Column (Initially Hidden)  -->
                         <DataGridTemplateColumn
                             x:Name="CustomValueColumn"
-                            Header="Custom Value"
                             Width="2*"
+                            Header="Custom Value"
                             Visibility="Collapsed">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -281,29 +286,26 @@
                                             <Style TargetType="ContentControl">
                                                 <Setter Property="Content" Value="{Binding CustomValue}" />
                                                 <Style.Triggers>
-                                                    <!-- Integer Type -->
+                                                    <!--  Integer Type  -->
                                                     <DataTrigger Binding="{Binding ValueType}" Value="Integer">
                                                         <Setter Property="Content">
                                                             <Setter.Value>
-                                                                <TextBox
-                                                                    Text="{Binding CustomValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                                    Style="{StaticResource IntegerTextBoxStyle}" />
+                                                                <TextBox Style="{StaticResource IntegerTextBoxStyle}" Text="{Binding CustomValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                                                             </Setter.Value>
                                                         </Setter>
                                                     </DataTrigger>
-                                                    <!-- Boolean Type -->
+                                                    <!--  Boolean Type  -->
                                                     <DataTrigger Binding="{Binding ValueType}" Value="Boolean">
                                                         <Setter Property="Content">
                                                             <Setter.Value>
-                                                                <ComboBox
-                                                                    SelectedValue="{Binding CustomValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                                                <ComboBox SelectedValue="{Binding CustomValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                                                                     <ComboBoxItem Content="Enabled" />
                                                                     <ComboBoxItem Content="Disabled" />
                                                                 </ComboBox>
                                                             </Setter.Value>
                                                         </Setter>
                                                     </DataTrigger>
-                                                    <!-- String Type -->
+                                                    <!--  String Type  -->
                                                     <DataTrigger Binding="{Binding ValueType}" Value="String">
                                                         <Setter Property="Content">
                                                             <Setter.Value>
@@ -324,7 +326,7 @@
                     </DataGrid.Columns>
                 </DataGrid>
 
-                <!-- GridSplitter between DataGrid and Log TextBox -->
+                <!--  GridSplitter between DataGrid and Log TextBox  -->
                 <GridSplitter
                     Grid.Row="2"
                     Height="2"
@@ -334,17 +336,17 @@
                     ResizeDirection="Rows"
                     ShowsPreview="True" />
 
-                <!-- Log TextBox -->
+                <!--  Log TextBox  -->
                 <Grid Grid.Row="3" Margin="5,5,5,5">
                     <Grid.RowDefinitions>
-                        <!-- Heading -->
+                        <!--  Heading  -->
                         <RowDefinition Height="Auto" />
-                        <!-- Content Area -->
+                        <!--  Content Area  -->
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
                     <Grid Grid.Row="0" Margin="10,0,0,0">
-                        <!-- Heading -->
+                        <!--  Heading  -->
                         <TextBlock
                             Margin="0,0,0,0"
                             FontSize="16"
@@ -365,7 +367,7 @@
                     </Grid>
                 </Grid>
 
-                <!-- Buttons -->
+                <!--  Buttons  -->
                 <Grid
                     Grid.Row="4"
                     Margin="5,5,5,5"
@@ -378,11 +380,11 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="2*" />
-                        <!-- New Column for Customize GPO Button -->
+                        <!--  New Column for Customize GPO Button  -->
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- Existing Buttons -->
+                    <!--  Existing Buttons  -->
                     <Button
                         x:Name="AuditButton"
                         Grid.Column="0"
@@ -390,7 +392,8 @@
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         Click="AuditButton_Click"
-                        Content="Audit" />
+                        Content="Audit"
+                        ToolTipService.ToolTip="Audit" />
                     <Button
                         x:Name="AuditAllButton"
                         Grid.Column="1"
@@ -398,7 +401,8 @@
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         Click="AuditAllButton_Click"
-                        Content="Audit All" />
+                        Content="Audit All"
+                        ToolTipService.ToolTip="Audit All" />
 
                     <Button
                         x:Name="ConfigButton"
@@ -407,7 +411,8 @@
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         Click="ConfigButton_Click"
-                        Content="Config" />
+                        Content="Config"
+                        ToolTipService.ToolTip="Config" />
 
                     <Button
                         x:Name="ConfigAllButton"
@@ -416,7 +421,8 @@
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         Click="ConfigAllButton_Click"
-                        Content="Config All" />
+                        Content="Config All"
+                        ToolTipService.ToolTip="Config All" />
 
                     <Button
                         x:Name="EditButton"
@@ -425,9 +431,10 @@
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         Click="EditButton_Click"
-                        Content="Edit" />
+                        Content="Edit"
+                        ToolTipService.ToolTip="Edit" />
 
-                    <!-- Revert Button -->
+                    <!--  Revert Button  -->
                     <Button
                         x:Name="RevertButton"
                         Grid.Column="5"
@@ -435,9 +442,10 @@
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         Click="RevertButton_Click"
-                        Content="Revert" />
+                        Content="Revert"
+                        ToolTipService.ToolTip="Revert" />
 
-                    <!-- Create GPO Button -->
+                    <!--  Create GPO Button  -->
                     <Button
                         x:Name="CreateGPOButton"
                         Grid.Column="6"
@@ -445,9 +453,10 @@
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         Click="CreateGPOButton_Click"
-                        Content="Create GPO" />
+                        Content="Create GPO"
+                        ToolTipService.ToolTip="Create GPO" />
 
-                    <!-- New Customize GPO Button -->
+                    <!--  New Customize GPO Button  -->
                     <Button
                         x:Name="CustomizeGPOButton"
                         Grid.Column="7"
@@ -455,11 +464,12 @@
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         Click="CustomizeGPOButton_Click"
-                        Content="Customize GPO" />
+                        Content="Customize GPO"
+                        ToolTipService.ToolTip="Customize GPO" />
                 </Grid>
             </Grid>
 
-            <!-- GridSplitter between Column 2 and Column 4 -->
+            <!--  GridSplitter between Column 2 and Column 4  -->
             <GridSplitter
                 Grid.Column="3"
                 Width="2"
@@ -469,7 +479,7 @@
                 ResizeDirection="Columns"
                 ShowsPreview="True" />
 
-            <!-- Third Column: Detail Section -->
+            <!--  Third Column: Detail Section  -->
             <Border
                 Grid.Column="4"
                 Padding="10"
@@ -477,14 +487,14 @@
                 CornerRadius="5">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <!-- Heading -->
+                        <!--  Heading  -->
                         <TextBlock
                             Margin="0,0,0,10"
                             FontSize="16"
                             FontWeight="Bold"
                             Text="Details" />
 
-                        <!-- Content -->
+                        <!--  Content  -->
                         <TextBlock
                             x:Name="detailsTextBlock"
                             FontFamily="Consolas"
