@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Threading;
+using Wpf.Ui.Appearance;
 
 namespace Techolics_.pages
 {
@@ -40,8 +41,12 @@ namespace Techolics_.pages
         private void GoToMainScreen()
         {
             MainWindow mainWindow = new MainWindow();
+
+            Application.Current.MainWindow = mainWindow;
+
             mainWindow.Show();
             this.Close();
         }
+
     }
 }
