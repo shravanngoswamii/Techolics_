@@ -47,6 +47,5 @@ namespace Techolics_.pages
             mainWindow.Show();
             this.Close();
         }
-
     }
 }
