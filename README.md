@@ -48,10 +48,20 @@ Following functionalities have been envisaged for the expected solution:
 1. Ensure .NET 8.0 SDK installed.
 2. Run `dotnet restore` and `dotnet build`.
 
-## Publishing
+## Publishing through CMD (Command Prompt)
 
-```bash
-dotnet publish -c Release -r win-x64 --self-contained true /p:TargetFramework=net8.0-windows /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishReadyToRun=false /p:PublishProtocol=FileSystem /p:PublishDir="%USERPROFILE%/Desktop/TestPublish/" /p:IncludeAllContentForSelfExtract=true /p:EnableCompressionInSingleFile=true
+In Command Prompt (CMD), use the following command:
+
+```cmd
+dotnet publish -c Release -r win-x64 --self-contained true /p:TargetFramework=net8.0-windows /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishReadyToRun=false /p:PublishProtocol=FileSystem /p:PublishDir="%USERPROFILE%\Desktop\TestPublish\" /p:IncludeAllContentForSelfExtract=true /p:EnableCompressionInSingleFile=true
+```
+
+## Publishing through PowerShell
+
+In PowerShell, use the following command:
+
+```
+dotnet publish -c Release -r win-x64 --self-contained true /p:TargetFramework=net8.0-windows /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishReadyToRun=false /p:PublishProtocol=FileSystem /p:PublishDir="$env:USERPROFILE\Desktop\TestPublish\" /p:IncludeAllContentForSelfExtract=true /p:EnableCompressionInSingleFile=true
 ```
 
 App will be published to the specified directory (Desktop/Techolic_Published).
