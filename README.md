@@ -53,7 +53,7 @@ Following functionalities have been envisaged for the expected solution:
 In Command Prompt (CMD), use the following command:
 
 ```cmd
-dotnet publish -c Release -r win-x64 --self-contained true /p:TargetFramework=net8.0-windows /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishReadyToRun=false /p:PublishProtocol=FileSystem /p:PublishDir="%USERPROFILE%\Desktop\TestPublish\" /p:IncludeAllContentForSelfExtract=true /p:EnableCompressionInSingleFile=true
+dotnet publish -c Release -r win-x64 --self-contained true /p:TargetFramework=net8.0-windows /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishReadyToRun=false /p:PublishProtocol=FileSystem /p:PublishDir="%USERPROFILE%/Desktop/TestPublish/" /p:IncludeAllContentForSelfExtract=true /p:EnableCompressionInSingleFile=true
 ```
 
 ## Publishing through PowerShell
