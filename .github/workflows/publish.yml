@@ -25,16 +25,7 @@ jobs:
         run: dotnet restore
 
       - name: Build and Publish EXE
-        run: |
-          dotnet publish -c Release -r win-x64 --self-contained true ^
-            /p:TargetFramework=net8.0-windows ^
-            /p:PublishSingleFile=true ^
-            /p:PublishTrimmed=false ^
-            /p:PublishReadyToRun=false ^
-            /p:PublishProtocol=FileSystem ^
-            /p:PublishDir="./publish_output/" ^
-            /p:IncludeAllContentForSelfExtract=true ^
-            /p:EnableCompressionInSingleFile=true
+        run: dotnet publish -c Release -r win-x64 --self-contained true /p:TargetFramework=net8.0-windows /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishReadyToRun=false /p:PublishProtocol=FileSystem /p:PublishDir="./publish_output/" /p:IncludeAllContentForSelfExtract=true /p:EnableCompressionInSingleFile=true
 
       - name: Generate Tag Name
         id: generate_tag
