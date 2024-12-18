@@ -65,13 +65,29 @@ namespace Techolics_
             // Control button visibility based on operation
             if (operation == "Audit")
             {
-                ConfigButton.Visibility = Visibility.Collapsed;
-                ConfigAllButton.Visibility = Visibility.Collapsed;
+                AuditDropDownButton.Visibility = Visibility.Visible;
+                //AuditAllButton.Visibility = Visibility.Visible;
+
+                ConfigDropDownButton.Visibility = Visibility.Collapsed;
+                //ConfigButton.Visibility = Visibility.Collapsed;
+                //ConfigAllButton.Visibility = Visibility.Collapsed;
+                EditButton.Visibility = Visibility.Collapsed;
                 RevertButton.Visibility = Visibility.Collapsed;
+                CreateGPOButton.Visibility = Visibility.Collapsed;
+                CustomizeGPOButton.Visibility = Visibility.Collapsed;
             }
             else if (operation == "Config")
             {
-                // All buttons are visible
+                AuditDropDownButton.Visibility = Visibility.Visible;
+                //AuditAllButton.Visibility = Visibility.Visible;
+
+                ConfigDropDownButton.Visibility = Visibility.Visible;
+                //ConfigButton.Visibility = Visibility.Visible;
+                //ConfigAllButton.Visibility = Visibility.Visible;
+                EditButton.Visibility = Visibility.Visible;
+                RevertButton.Visibility = Visibility.Visible;
+                CreateGPOButton.Visibility = Visibility.Visible;
+                CustomizeGPOButton.Visibility = Visibility.Visible;
             }
 
             // Initialize and start the log refresh timer
@@ -145,6 +161,7 @@ namespace Techolics_
                     Title = "No Profile Selected",
                     Content = "Please select at least one policy.",
                     CloseButtonText = "Close",
+
                 };
                 await messageBox.ShowDialogAsync();
                 return;
@@ -162,11 +179,12 @@ namespace Techolics_
                     Title = "No Policy Selected",
                     Content = "Please select at least one policy.",
                     CloseButtonText = "Close",
+
                 };
                 await messageBox.ShowDialogAsync();
                 return;
             }
-            // Pass fromEditWindow: false
+
             logic.StartConfig(selectedItems, fromEditWindow: false);
         }
 
@@ -243,7 +261,6 @@ namespace Techolics_
                 await messageBox.ShowDialogAsync();
                 return;
             }
-            // Pass fromEditWindow: false
             logic.StartConfig(allItems, fromEditWindow: false);
         }
 
