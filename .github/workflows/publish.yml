@@ -26,7 +26,7 @@ jobs:
 
       - name: Get commit short hash
         id: vars
-        run: echo "tag_name=exe_$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        run: echo "tag_name=Techolics_$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
