@@ -34,13 +34,13 @@ Background: Group Policy Objects (GPOs) are powerful tools in Windows environmen
 
 #### Expected Solution:
 Following functionalities have been envisaged for the expected solution:
-- [ ] (a) To create, edit and manage GPOs as per CIS guidelines and user requirements, if needed.
-- [ ] (b) The customised GPOs generated should be deployable on airgapped / standalone system.
-- [ ] (c) To maintain multiple group / category of system hardening settings with appropriate documentation to define the configuration details for each of the group / category.
-- [ ] (d) Import / Export of configuration details for catering to user requirement to maintain multiple group / category of system configurations.
-- [ ] (e) Tool should be able to import documentation from CIS guidelines available in PDF format.
-- [ ] (f) Envisaged tool should support in deploying GPOs on the target machine.
-- [ ] (g) Envisaged tool should support in testing and auditing of system configurations on the target machine.
+- [x] (a) To create, edit and manage GPOs as per CIS guidelines and user requirements, if needed.
+- [x] (b) The customised GPOs generated should be deployable on airgapped / standalone system.
+- [x] (c) To maintain multiple group / category of system hardening settings with appropriate documentation to define the configuration details for each of the group / category.
+- [x] (d) Import / Export of configuration details for catering to user requirement to maintain multiple group / category of system configurations.
+- [x] (e) Tool should be able to import documentation from CIS guidelines available in PDF format.
+- [x] (f) Envisaged tool should support in deploying GPOs on the target machine.
+- [x] (g) Envisaged tool should support in testing and auditing of system configurations on the target machine.
 
 
 ## Local Setup
