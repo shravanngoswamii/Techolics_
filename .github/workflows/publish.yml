@@ -1,4 +1,4 @@
-name: Create release with standalone exe
+name: Create Release with Standalone EXE
 
 on:
   workflow_dispatch:
@@ -9,40 +9,59 @@ permissions:
 jobs:
   build_and_release:
     runs-on: windows-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Needed to push tags
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore
+      - name: Restore Dependencies
         run: dotnet restore
 
       - name: Build and Publish EXE
-        run: dotnet publish -c Release -r win-x64 --self-contained true /p:TargetFramework=net8.0-windows /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishReadyToRun=false /p:PublishProtocol=FileSystem /p:PublishDir="./publish_output/" /p:IncludeAllContentForSelfExtract=true /p:EnableCompressionInSingleFile=true
-
-      - name: Get commit short hash
-        id: vars
         run: |
-          echo "tag_name=Techolics_$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          dotnet publish -c Release -r win-x64 --self-contained true ^
+            /p:TargetFramework=net8.0-windows ^
+            /p:PublishSingleFile=true ^
+            /p:PublishTrimmed=false ^
+            /p:PublishReadyToRun=false ^
+            /p:PublishProtocol=FileSystem ^
+            /p:PublishDir="./publish_output/" ^
+            /p:IncludeAllContentForSelfExtract=true ^
+            /p:EnableCompressionInSingleFile=true
 
-      - name: Create Git tag
+      - name: Generate Tag Name
+        id: generate_tag
+        shell: pwsh
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git tag -a ${{ steps.vars.outputs.tag_name }} -m "Release ${{ steps.vars.outputs.tag_name }}"
-          git push origin ${{ steps.vars.outputs.tag_name }}
+          $shortHash = git rev-parse --short HEAD
+          $tagName = "Techolics_$shortHash"
+          echo "tag_name=$tagName" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-      - name: Create GitHub release
+      - name: Create and Push Git Tag
+        shell: pwsh
+        run: |
+          $tag = "${{ steps.generate_tag.outputs.tag_name }}"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git tag $tag
+          git push origin $tag
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.vars.outputs.tag_name }}
+          tag_name: ${{ steps.generate_tag.outputs.tag_name }}
           files: ./publish_output/*.exe
           body: |
+            ## Standalone EXE Release
+
             This release contains the standalone EXE build of the application.
             Download and run on Windows as needed.
+
+            **Version:** ${{ steps.generate_tag.outputs.tag_name }}
