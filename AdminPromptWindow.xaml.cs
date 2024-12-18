@@ -106,5 +106,12 @@ namespace Techolics_
             base.OnClosed(e);
         }
 
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            // Sets keyboard focus on the first Button in the sample.
+            Keyboard.Focus(YesButton);
+        }
+
+
     }
 }

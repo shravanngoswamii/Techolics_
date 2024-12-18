@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Xml.Serialization;
 
@@ -10,9 +11,7 @@ namespace Techolics_
         public CISBenchmark LoadBenchmarkValues(string resourceName)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(CISBenchmark));
-
-            // Load the XML content from the embedded resource
-            using (var stream = GetResourceStream(resourceName))
+            using (Stream stream = GetResourceStream(resourceName))
             {
                 var result = serializer.Deserialize(stream) as CISBenchmark;
                 if (result == null)
@@ -26,9 +25,7 @@ namespace Techolics_
         public CISBenchmarkDocumentation LoadBenchmarkDocumentation(string resourceName)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(CISBenchmarkDocumentation));
-
-            // Load the XML content from the embedded resource
-            using (var stream = GetResourceStream(resourceName))
+            using (Stream stream = GetResourceStream(resourceName))
             {
                 var result = serializer.Deserialize(stream) as CISBenchmarkDocumentation;
                 if (result == null)
@@ -42,15 +39,15 @@ namespace Techolics_
         private Stream GetResourceStream(string resourceName)
         {
             var assembly = Assembly.GetExecutingAssembly();
-            var resourcePath = $"{assembly.GetName().Name}.{resourceName.Replace('/', '.')}"; // Format for embedded resource
+            string? resourcePath = assembly.GetManifestResourceNames()
+                .FirstOrDefault(n => n.EndsWith(resourceName, StringComparison.OrdinalIgnoreCase));
 
-            var stream = assembly.GetManifestResourceStream(resourcePath);
-            if (stream == null)
-            {
-                throw new FileNotFoundException($"Resource not found: {resourcePath}");
-            }
+            if (resourcePath == null)
+                throw new FileNotFoundException($"Resource not found: {resourceName}");
 
-            return stream;
+            // Ensure the stream is not null
+            return assembly.GetManifestResourceStream(resourcePath)
+                ?? throw new FileNotFoundException($"Resource stream could not be loaded for: {resourceName}");
         }
     }
 }

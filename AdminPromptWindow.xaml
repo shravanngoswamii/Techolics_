@@ -10,13 +10,27 @@
     ResizeMode="NoResize"
     SizeToContent="WidthAndHeight"
     WindowStartupLocation="CenterScreen"
-    WindowStyle="None">
+    WindowStyle="None"
+    Loaded="OnLoaded">
+
+    <ui:FluentWindow.Resources>
+        <!-- Style for Button to show a border when it has keyboard focus -->
+        <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+            <Style.Triggers>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                    <Setter Property="BorderBrush" Value="DodgerBlue" />
+                    <Setter Property="BorderThickness" Value="2" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </ui:FluentWindow.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <!--  TitleBar  -->
+        <!-- TitleBar -->
         <ui:TitleBar
             Title="Admin Priviledge"
             Grid.Row="0"
@@ -31,8 +45,10 @@
             </ui:TitleBar.Icon>
         </ui:TitleBar>
 
-        <StackPanel Margin="20, 5, 20, 20" Grid.Row="1">
-            <!--  Informational Text  -->
+        <StackPanel Margin="20,5,20,20" Grid.Row="1"
+                    KeyboardNavigation.DirectionalNavigation="Cycle"
+                    KeyboardNavigation.TabNavigation="Cycle">
+            <!-- Informational Text -->
             <ui:TextBlock
                 Margin="0,0,0,10"
                 FontSize="14"
@@ -41,14 +57,20 @@
                 Text="Administrative privileges are required to use this feature. Would you like to restart the application with administrative privileges?"
                 TextWrapping="Wrap" />
 
-            <!--  Action Buttons  -->
-            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+            <!-- Action Buttons -->
+            <StackPanel HorizontalAlignment="Right"
+                        Orientation="Horizontal"
+                        KeyboardNavigation.DirectionalNavigation="Cycle"
+                        KeyboardNavigation.TabNavigation="Cycle">
+
                 <ui:Button
                     x:Name="YesButton"
                     Width="100"
                     Margin="0,0,10,0"
                     Click="YesButton_Click"
-                    Content="Yes" />
+                    Content="Yes"
+                    IsDefault="True" />
+
                 <ui:Button
                     x:Name="NoButton"
                     Width="100"

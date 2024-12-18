@@ -185,7 +185,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     input_pdf_path = sys.argv[1]  # Get the file path from the command-line arguments
-    output_xml_file = r"C:\Users\shrav\Desktop\pdf\Techolics_\data\policies.xml"
+    output_xml_file = r"data\policies.xml"
   # Specify your desired output XML file path
 
     if not os.path.exists(input_pdf_path):

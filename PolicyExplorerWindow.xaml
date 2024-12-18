@@ -10,6 +10,8 @@
     Closed="Window_Closed"
     Icon="/assets/logo.png"
     WindowStartupLocation="CenterScreen">
+    <!--  WindowState="Maximized"  -->
+
 
     <!--  Define Resources  -->
     <ui:FluentWindow.Resources>
@@ -38,9 +40,15 @@
         </Grid.RowDefinitions>
 
         <!--  TitleBar  -->
-        <ui:TitleBar Title="Policy Explorer - Techolics_" Grid.Row="0" DockPanel.Dock="Top">
+        <ui:TitleBar
+            Title="Policy Explorer - Techolics_"
+            Grid.Row="0"
+            DockPanel.Dock="Top">
             <ui:TitleBar.Icon>
-                <ui:ImageIcon Margin="0,0,-5,0" Height="15" Source="pack://application:,,,/Assets/logo.png" />
+                <ui:ImageIcon
+                    Height="15"
+                    Margin="0,0,-5,0"
+                    Source="pack://application:,,,/Assets/logo.png" />
             </ui:TitleBar.Icon>
         </ui:TitleBar>
 
@@ -97,7 +105,7 @@
                 <!--  Column 3: GridSplitter  -->
                 <ColumnDefinition Width="5" />
                 <!--  Column 4: Details Section  -->
-                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="1.1*" />
             </Grid.ColumnDefinitions>
 
             <!--  First Column: Policy Explorer  -->
@@ -133,6 +141,7 @@
                 Width="2"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
+                Background="{ui:ThemeResource AccentTextFillColorDisabledBrush}"
                 ResizeBehavior="PreviousAndNext"
                 ResizeDirection="Columns"
                 ShowsPreview="True" />
@@ -332,6 +341,7 @@
                     Height="2"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
+                    Background="{ui:ThemeResource AccentTextFillColorDisabledBrush}"
                     ResizeBehavior="PreviousAndNext"
                     ResizeDirection="Rows"
                     ShowsPreview="True" />
@@ -366,137 +376,131 @@
                             VerticalScrollBarVisibility="Auto" />
                     </Grid>
                 </Grid>
-
-                <!--  Buttons  -->
+                <!--  Buttons Row  -->
                 <Grid
                     Grid.Row="4"
                     Margin="5,5,5,5"
                     HorizontalAlignment="Center">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="2*" />
-                        <!--  New Column for Customize GPO Button  -->
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <!--  Existing Buttons  -->
-                    <Button
-                        x:Name="AuditButton"
+                    <ui:DropDownButton
+                        x:Name="AuditDropDownButton"
                         Grid.Column="0"
                         Margin="5"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
-                        Click="AuditButton_Click"
-                        Content="Audit"
-                        ToolTipService.ToolTip="Audit" />
-                    <Button
-                        x:Name="AuditAllButton"
+                        Content="Audit">
+
+                        <ui:DropDownButton.Flyout>
+                            <ContextMenu>
+                                <!--  Primary action: Audit  -->
+                                <MenuItem Click="AuditButton_Click" Header="Audit" />
+                                <!--  Secondary action: Audit All  -->
+                                <MenuItem Click="AuditAllButton_Click" Header="Audit All" />
+                            </ContextMenu>
+                        </ui:DropDownButton.Flyout>
+                    </ui:DropDownButton>
+
+                    <ui:DropDownButton
+                        x:Name="ConfigDropDownButton"
                         Grid.Column="1"
                         Margin="5"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
-                        Click="AuditAllButton_Click"
-                        Content="Audit All"
-                        ToolTipService.ToolTip="Audit All" />
+                        Content="Config">
 
+                        <ui:DropDownButton.Flyout>
+                            <ContextMenu>
+                                <!--  Primary action: Config  -->
+                                <MenuItem Click="ConfigButton_Click" Header="Config" />
+                                <!--  Secondary action: Config All  -->
+                                <MenuItem Click="ConfigAllButton_Click" Header="Config All" />
+                            </ContextMenu>
+                        </ui:DropDownButton.Flyout>
+                    </ui:DropDownButton>
+
+
+
+                    <!--  Edit Button  -->
                     <Button
-                        x:Name="ConfigButton"
+                        x:Name="EditButton"
                         Grid.Column="2"
                         Margin="5"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
-                        Click="ConfigButton_Click"
-                        Content="Config"
-                        ToolTipService.ToolTip="Config" />
-
-                    <Button
-                        x:Name="ConfigAllButton"
-                        Grid.Column="3"
-                        Margin="5"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
-                        Click="ConfigAllButton_Click"
-                        Content="Config All"
-                        ToolTipService.ToolTip="Config All" />
-
-                    <Button
-                        x:Name="EditButton"
-                        Grid.Column="4"
-                        Margin="5"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"
                         Click="EditButton_Click"
-                        Content="Edit"
-                        ToolTipService.ToolTip="Edit" />
+                        Content="Edit" />
 
                     <!--  Revert Button  -->
                     <Button
                         x:Name="RevertButton"
-                        Grid.Column="5"
+                        Grid.Column="3"
                         Margin="5"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         Click="RevertButton_Click"
-                        Content="Revert"
-                        ToolTipService.ToolTip="Revert" />
+                        Content="Revert" />
 
                     <!--  Create GPO Button  -->
                     <Button
                         x:Name="CreateGPOButton"
-                        Grid.Column="6"
+                        Grid.Column="4"
                         Margin="5"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         Click="CreateGPOButton_Click"
-                        Content="Create GPO"
-                        ToolTipService.ToolTip="Create GPO" />
+                        Content="Create GPO" />
 
-                    <!--  New Customize GPO Button  -->
+                    <!--  Customize GPO Button  -->
                     <Button
                         x:Name="CustomizeGPOButton"
-                        Grid.Column="7"
+                        Grid.Column="5"
                         Margin="5"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"
                         Click="CustomizeGPOButton_Click"
-                        Content="Customize GPO"
-                        ToolTipService.ToolTip="Customize GPO" />
+                        Content="Customize GPO" />
+
+                    <!--  Hidden Buttons for Code-Behind Reference  -->
+                    <Button x:Name="ConfigButton" Visibility="Collapsed" />
+                    <Button x:Name="ConfigAllButton" Visibility="Collapsed" />
+                    <Button x:Name="AuditAllButton" Visibility="Collapsed" />
                 </Grid>
             </Grid>
 
-            <!--  GridSplitter between Column 2 and Column 4  -->
             <GridSplitter
                 Grid.Column="3"
                 Width="2"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
+                Background="{ui:ThemeResource AccentTextFillColorDisabledBrush}"
                 ResizeBehavior="PreviousAndNext"
                 ResizeDirection="Columns"
                 ShowsPreview="True" />
 
-            <!--  Third Column: Detail Section  -->
             <Border
                 Grid.Column="4"
                 Padding="10"
                 BorderThickness="1"
                 CornerRadius="5">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <!--  Heading  -->
+                    <StackPanel x:Name="DetailsContainer">
                         <TextBlock
                             Margin="0,0,0,10"
                             FontSize="16"
                             FontWeight="Bold"
                             Text="Details" />
-
-                        <!--  Content  -->
+                        <!--  Initially show a prompt if nothing is selected  -->
                         <TextBlock
-                            x:Name="detailsTextBlock"
                             FontFamily="Consolas"
                             FontSize="14"
                             TextWrapping="Wrap">
@@ -505,6 +509,7 @@
                     </StackPanel>
                 </ScrollViewer>
             </Border>
+
         </Grid>
     </Grid>
 </ui:FluentWindow>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Xml.Linq;
 using Techolics_.Logging;
 
@@ -16,51 +17,56 @@ namespace Techolics_.PolicyManagement
         {
             try
             {
-                string mappingFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "SIDMappings.xml");
-                Logger.Instance.WriteLog($"PolicyValueConverter: Loading SIDMappings from {mappingFile}");
-                if (File.Exists(mappingFile))
+                string resourceName = "SIDMappings.xml";
+                Logger.Instance.WriteLog($"PolicyValueConverter: Loading SIDMappings from embedded resource: {resourceName}");
+
+                using (var stream = GetEmbeddedResourceStream(resourceName))
                 {
-                    var doc = XDocument.Load(mappingFile);
-                    foreach (var elem in doc.Descendants("Mapping"))
+                    if (stream == null)
                     {
-                        var key = (string?)elem.Attribute("key");
-                        var val = (string?)elem.Attribute("value");
-                        if (!string.IsNullOrEmpty(key))
-                        {
-                            key = key.Trim();
-                        }
-                        if (!string.IsNullOrEmpty(val))
-                        {
-                            val = val.Trim();
-                        }
-
-                        if (!string.IsNullOrEmpty(key) && val != null)
-                        {
-                            SidMappings[key] = val;
-                        }
+                        Logger.Instance.WriteLog("PolicyValueConverter: SIDMappings.xml resource not found!");
                     }
-
-                    // Build reverse mappings
-                    foreach (var kvp in SidMappings)
+                    else
                     {
-                        if (!string.IsNullOrEmpty(kvp.Value))
+                        var doc = XDocument.Load(stream);
+                        foreach (var elem in doc.Descendants("Mapping"))
                         {
-                            ReverseSidMappings[kvp.Value] = kvp.Key;
+                            var key = ((string?)elem.Attribute("key")?.Value)?.Trim();
+                            var val = ((string?)elem.Attribute("value")?.Value)?.Trim();
+
+                            if (!string.IsNullOrEmpty(key) && val != null)
+                            {
+                                SidMappings[key] = val;
+                            }
                         }
+
+                        // Build reverse mappings
+                        foreach (var kvp in SidMappings)
+                        {
+                            if (!string.IsNullOrEmpty(kvp.Value))
+                            {
+                                ReverseSidMappings[kvp.Value] = kvp.Key;
+                            }
+                        }
+
+                        Logger.Instance.WriteLog($"PolicyValueConverter: Total mappings loaded: {SidMappings.Count}");
+                        Logger.Instance.WriteLog($"PolicyValueConverter: Total reverse mappings loaded: {ReverseSidMappings.Count}");
                     }
                 }
-                else
-                {
-                    Logger.Instance.WriteLog("PolicyValueConverter: SIDMappings.xml not found!");
-                }
-
-                Logger.Instance.WriteLog($"PolicyValueConverter: Total mappings loaded: {SidMappings.Count}");
-                Logger.Instance.WriteLog($"PolicyValueConverter: Total reverse mappings loaded: {ReverseSidMappings.Count}");
             }
             catch (Exception ex)
             {
                 Logger.Instance.WriteLog($"PolicyValueConverter: Error loading SIDMappings: {ex.Message}");
             }
+        }
+
+        private static Stream? GetEmbeddedResourceStream(string resourceName)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            string? resourcePath = assembly.GetManifestResourceNames()
+                .FirstOrDefault(r => r.EndsWith(resourceName, StringComparison.OrdinalIgnoreCase));
+
+            return resourcePath != null ? assembly.GetManifestResourceStream(resourcePath) : null;
         }
 
         public static string ConvertForConfiguration(string value, string valueType)
@@ -158,6 +164,7 @@ namespace Techolics_.PolicyManagement
 
             return string.Join(", ", parts);
         }
+
         public static List<string> GetAllFriendlyNames()
         {
             // Return all keys from SidMappings

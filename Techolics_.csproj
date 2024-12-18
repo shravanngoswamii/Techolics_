@@ -7,11 +7,9 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<UseWPF>true</UseWPF>
 		<PublishSingleFile>true</PublishSingleFile>
-		<!-- Enable single file publishing -->
 		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
-		<!-- Specify the target platform -->
 		<SelfContained>true</SelfContained>
-		<!-- Optional: Make the app self-contained (includes .NET runtime) -->
+		<DebugType>embedded</DebugType>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -19,26 +17,18 @@
 		<None Remove="assets\logo.png" />
 		<None Remove="assets\remove.png" />
 		<None Remove="data\SIDMappings.xml" />
+		<None Remove="Tools\LGPO.exe" />
 	</ItemGroup>
 
+	<!-- Ensure data and tools files are embedded -->
 	<ItemGroup>
-		<Page Remove="data\CIS_Benchmark_Documentation.xaml" />
-		<Page Remove="data\CIS_Benchmark_Values.xaml" />
+		<EmbeddedResource Include="data\CIS_Benchmark_Documentation.xml" />
+		<EmbeddedResource Include="data\CIS_Benchmark_Values.xml" />
+		<EmbeddedResource Include="data\SIDMappings.xml" />
+		<EmbeddedResource Include="data\script.py" />
+		<EmbeddedResource Include="Tools\LGPO.exe" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<EmbeddedResource Include="data\CIS_Benchmark_Documentation.xaml">
-			<Generator>MSBuild:Compile</Generator>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</EmbeddedResource>
-		<EmbeddedResource Include="data\CIS_Benchmark_Values.xaml">
-			<Generator>MSBuild:Compile</Generator>
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</EmbeddedResource>
-		<EmbeddedResource Include="data\SIDMappings.xml">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</EmbeddedResource>
-	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Extended.Wpf.Toolkit" Version="4.6.1" />

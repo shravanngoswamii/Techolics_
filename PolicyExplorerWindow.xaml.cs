@@ -476,127 +476,123 @@ namespace Techolics_
             if (hasRegistryPolicies)
             {
                 // Create the LGPO text file in the correct format
-                string tempLgpoFile = Path.Combine(Path.GetTempPath(), $"tmp_{Guid.NewGuid()}.txt"); // Use .txt extension as per user example
+                string tempLgpoFile = Path.Combine(Path.GetTempPath(), $"tmp_{Guid.NewGuid()}.txt");
                 File.WriteAllLines(tempLgpoFile, registryEntries);
                 Logger.Instance.WriteLog(
                     $"Registry policies written to temporary LGPO file: {tempLgpoFile}"
                 );
 
-                // Define the path to LGPO.exe
-                string lgpoExePath = @"C:\Users\shrav\Downloads\LGPO_30\LGPO.exe"; // Update this path as needed
-
-                if (!File.Exists(lgpoExePath))
+                string lgpoExePath;
+                try
                 {
-                    Logger.Instance.WriteLog("LGPO.exe not found. Please ensure it is available.");
+                    lgpoExePath = ExtractLgpo();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Instance.WriteLog($"LGPO.exe extraction failed: {ex.Message}");
                     var errorBox = new WpfMessageBox
                     {
                         Title = "LGPO.exe Not Found",
                         Content =
-                            "LGPO.exe was not found at the specified path. Please ensure LGPO.exe is available.",
+                            "Failed to extract LGPO.exe. Please ensure it is embedded correctly.",
                         CloseButtonText = "OK",
                     };
                     await errorBox.ShowDialogAsync();
+                    return;
                 }
-                else
+
+                // Define the path where Registry.pol should be placed within the GPO folder
+                string registryPolPath = Path.Combine(
+                    machinePath,
+                    "Microsoft",
+                    "Windows",
+                    "Group Policy",
+                    "Machine"
+                );
+                Directory.CreateDirectory(registryPolPath);
+
+                string registryPolFilePath = Path.Combine(registryPolPath, "Registry.pol");
+
+                var startInfo = new ProcessStartInfo
                 {
-                    // Define the path where Registry.pol should be placed within the GPO folder
-                    string registryPolPath = Path.Combine(
-                        machinePath,
-                        "Microsoft",
-                        "Windows",
-                        "Group Policy",
-                        "Machine"
-                    );
-                    Directory.CreateDirectory(registryPolPath); // Ensure the directory exists
+                    FileName = lgpoExePath,
+                    Arguments = $"/r \"{tempLgpoFile}\" /w \"{registryPolFilePath}\"",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
+                };
 
-                    string registryPolFilePath = Path.Combine(registryPolPath, "Registry.pol");
-
-                    var startInfo = new ProcessStartInfo
+                using (var proc = new Process { StartInfo = startInfo })
+                {
+                    try
                     {
-                        FileName = lgpoExePath,
-                        Arguments = $"/r \"{tempLgpoFile}\" /w \"{registryPolFilePath}\"",
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        CreateNoWindow = true,
-                    };
+                        proc.Start();
 
-                    using (var proc = new Process { StartInfo = startInfo })
-                    {
-                        try
+                        string output = await proc.StandardOutput.ReadToEndAsync();
+                        string error = await proc.StandardError.ReadToEndAsync();
+                        proc.WaitForExit();
+
+                        // Log the output and error
+                        if (!string.IsNullOrEmpty(output))
                         {
-                            proc.Start();
-
-                            string output = await proc.StandardOutput.ReadToEndAsync();
-                            string error = await proc.StandardError.ReadToEndAsync();
-                            proc.WaitForExit();
-
-                            // Log the output and error streams
-                            if (!string.IsNullOrEmpty(output))
-                            {
-                                Logger.Instance.WriteLog($"LGPO.exe Output: {output}");
-                            }
-                            if (!string.IsNullOrEmpty(error))
-                            {
-                                Logger.Instance.WriteLog($"LGPO.exe Error: {error}");
-                            }
-
-                            if (proc.ExitCode != 0)
-                            {
-                                Logger.Instance.WriteLog(
-                                    $"LGPO.exe exited with code {proc.ExitCode}."
-                                );
-                                var errorBox = new WpfMessageBox
-                                {
-                                    Title = "LGPO.exe Error",
-                                    Content =
-                                        $"LGPO.exe encountered an error while processing Registry policies.\n\nExit Code: {proc.ExitCode}\n\nError: {error}\n\nPlease ensure that the LGPO text file is correctly formatted and that you have the necessary permissions to execute LGPO.exe.",
-                                    CloseButtonText = "OK",
-                                };
-                                await errorBox.ShowDialogAsync();
-                            }
-                            else
-                            {
-                                Logger.Instance.WriteLog(
-                                    "LGPO.exe executed successfully for Registry policies."
-                                );
-                            }
+                            Logger.Instance.WriteLog($"LGPO.exe Output: {output}");
                         }
-                        catch (Exception ex)
+                        if (!string.IsNullOrEmpty(error))
                         {
-                            Logger.Instance.WriteLog(
-                                $"Exception while running LGPO.exe: {ex.Message}"
-                            );
-                            var exceptionBox = new WpfMessageBox
+                            Logger.Instance.WriteLog($"LGPO.exe Error: {error}");
+                        }
+
+                        if (proc.ExitCode != 0)
+                        {
+                            Logger.Instance.WriteLog($"LGPO.exe exited with code {proc.ExitCode}.");
+                            var errorBox = new WpfMessageBox
                             {
-                                Title = "LGPO.exe Exception",
+                                Title = "LGPO.exe Error",
                                 Content =
-                                    $"An exception occurred while executing LGPO.exe: {ex.Message}",
+                                    $"LGPO.exe encountered an error.\nExit Code: {proc.ExitCode}\nError: {error}",
                                 CloseButtonText = "OK",
                             };
-                            await exceptionBox.ShowDialogAsync();
+                            await errorBox.ShowDialogAsync();
+                        }
+                        else
+                        {
+                            Logger.Instance.WriteLog(
+                                "LGPO.exe executed successfully for Registry policies."
+                            );
                         }
                     }
-
-                    // Clean up temporary LGPO file
-                    if (File.Exists(tempLgpoFile))
+                    catch (Exception ex)
                     {
-                        try
+                        Logger.Instance.WriteLog($"Exception while running LGPO.exe: {ex.Message}");
+                        var exceptionBox = new WpfMessageBox
                         {
-                            File.Delete(tempLgpoFile);
-                            Logger.Instance.WriteLog(
-                                $"Temporary LGPO file deleted: {tempLgpoFile}"
-                            );
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.Instance.WriteLog(
-                                $"Failed to delete temporary LGPO file: {ex.Message}"
-                            );
-                        }
+                            Title = "LGPO.exe Exception",
+                            Content =
+                                $"An exception occurred while executing LGPO.exe: {ex.Message}",
+                            CloseButtonText = "OK",
+                        };
+                        await exceptionBox.ShowDialogAsync();
+                    }
+                }
+
+                // Clean up temporary LGPO file
+                if (File.Exists(tempLgpoFile))
+                {
+                    try
+                    {
+                        File.Delete(tempLgpoFile);
+                        Logger.Instance.WriteLog($"Temporary LGPO file deleted: {tempLgpoFile}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Instance.WriteLog(
+                            $"Failed to delete temporary LGPO file: {ex.Message}"
+                        );
                     }
                 }
             }
+            // No else block is needed here.
 
             // Store metadata
             if (!string.IsNullOrEmpty(gpoDescription))
@@ -667,6 +663,36 @@ namespace Techolics_
             return (hiveName, subKeyPath);
         }
 
+        private string ExtractEmbeddedScript(string resourceName)
+        {
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            string? resourcePath = assembly
+                .GetManifestResourceNames()
+                .FirstOrDefault(n => n.EndsWith(resourceName, StringComparison.OrdinalIgnoreCase));
+
+            if (resourcePath == null)
+                throw new FileNotFoundException($"{resourceName} resource not found in assembly.");
+
+            string tempDir = Path.Combine(Path.GetTempPath(), "Techolics_Temp");
+            Directory.CreateDirectory(tempDir);
+
+            string tempScriptPath = Path.Combine(tempDir, resourceName);
+
+            using (Stream resourceStream = assembly.GetManifestResourceStream(resourcePath)!)
+            using (
+                FileStream fileStream = new FileStream(
+                    tempScriptPath,
+                    FileMode.Create,
+                    FileAccess.Write
+                )
+            )
+            {
+                resourceStream.CopyTo(fileStream);
+            }
+
+            return tempScriptPath;
+        }
+
         private async void ImportButton_Click(object sender, RoutedEventArgs e)
         {
             ProgressBar.Visibility = Visibility.Visible; // Show the progress bar
@@ -682,12 +708,14 @@ namespace Techolics_
                 if (openFileDialog.ShowDialog() == true)
                 {
                     string pdfFilePath = openFileDialog.FileName;
+                    string pythonScript = string.Empty;
 
                     try
                     {
-                        // Define the Python script and arguments
-                        string pythonScript =
-                            @"C:\Users\shrav\Desktop\pdf\Techolics_\data\script.py"; // Update this path
+                        // Extract the Python script from embedded resources
+                        pythonScript = ExtractEmbeddedScript("script.py");
+
+                        // Define arguments for the Python script
                         string arguments = $"\"{pythonScript}\" \"{pdfFilePath}\"";
 
                         var process = new System.Diagnostics.Process
@@ -721,8 +749,8 @@ namespace Techolics_
                             return;
                         }
 
-                        string generatedXmlPath =
-                            @"C:\Users\shrav\Desktop\pdf\Techolics_\data\policies.xml"; // Update this path
+                        // Load the generated XML (ensure your script writes to this path)
+                        string generatedXmlPath = "data/policies.xml";
                         LoadGeneratedXml(generatedXmlPath);
 
                         var successMessageBox = new WpfMessageBox
@@ -742,6 +770,26 @@ namespace Techolics_
                             CloseButtonText = "OK",
                         };
                         await errorBox.ShowDialogAsync();
+                    }
+                    finally
+                    {
+                        // Clean up the extracted script file
+                        if (!string.IsNullOrEmpty(pythonScript) && File.Exists(pythonScript))
+                        {
+                            try
+                            {
+                                File.Delete(pythonScript);
+                                Logger.Instance.WriteLog(
+                                    $"Temporary script file deleted: {pythonScript}"
+                                );
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.Instance.WriteLog(
+                                    $"Failed to delete temporary script file: {ex.Message}"
+                                );
+                            }
+                        }
                     }
                 }
             }
@@ -791,6 +839,36 @@ namespace Techolics_
         private void myDataGrid_SelectionChanged_1(object sender, SelectionChangedEventArgs e)
         {
             // Implement selection changed logic here if needed
+        }
+
+        private string ExtractLgpo()
+        {
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            string? resourceName = assembly
+                .GetManifestResourceNames()
+                .FirstOrDefault(n => n.EndsWith("LGPO.exe", StringComparison.OrdinalIgnoreCase));
+
+            if (resourceName == null)
+                throw new FileNotFoundException("LGPO.exe resource not found in assembly.");
+
+            string tempDir = Path.Combine(Path.GetTempPath(), "Techolics_Temp");
+            Directory.CreateDirectory(tempDir);
+
+            string tempExePath = Path.Combine(tempDir, "LGPO.exe");
+
+            using (Stream resourceStream = assembly.GetManifestResourceStream(resourceName)!)
+            using (
+                FileStream fileStream = new FileStream(
+                    tempExePath,
+                    FileMode.Create,
+                    FileAccess.Write
+                )
+            )
+            {
+                resourceStream.CopyTo(fileStream);
+            }
+
+            return tempExePath;
         }
 
         #region Customize GPO Functionality
@@ -846,5 +924,6 @@ namespace Techolics_
         }
 
         #endregion
+
     }
 }

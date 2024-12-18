@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Media;
 using Techolics_.Logging;
 using Techolics_.PolicyManagement;
@@ -13,6 +14,7 @@ namespace Techolics_
     public class PolicyWindowLogic
     {
         public CISBenchmark GetBenchmarkValues() => benchmarkValues;
+
         public CISBenchmarkDocumentation GetBenchmarkDocumentation() => benchmarkDocumentation;
 
         private CISBenchmark benchmarkValues;
@@ -34,9 +36,9 @@ namespace Techolics_
 
             // Load data from XML files
             dataLoader = new DataLoader();
-            benchmarkValues = dataLoader.LoadBenchmarkValues("data/CIS_Benchmark_Values.xaml");
+            benchmarkValues = dataLoader.LoadBenchmarkValues("CIS_Benchmark_Values.xml");
             benchmarkDocumentation = dataLoader.LoadBenchmarkDocumentation(
-                "data/CIS_Benchmark_Documentation.xaml"
+                "CIS_Benchmark_Documentation.xml"
             );
 
             // Populate the TreeView
@@ -356,7 +358,6 @@ namespace Techolics_
             return docPolicy?.Documentation?.Description?.Text ?? "No description available.";
         }
 
-
         // Method to get the default value text for a policy
         private string GetDefaultValueText(Policy policy)
         {
@@ -379,8 +380,26 @@ namespace Techolics_
         // Event handler for DataGrid's SelectionChanged event (Optional)
         public void MyDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // Clear the details section
-            policyExplorer.detailsTextBlock.Text = "";
+            // Clear existing details
+            var container = (StackPanel)policyExplorer.FindName("DetailsContainer");
+            container.Children.Clear();
+
+            // Check if anything is selected
+            if (policyExplorer.myDataGrid.SelectedItems.Count == 0)
+            {
+                // No selection, show default message
+                container.Children.Add(
+                    new TextBlock
+                    {
+                        Text = "Select rows to view details.",
+                        FontFamily = new System.Windows.Media.FontFamily("Consolas"),
+                        FontSize = 14,
+                        FontStyle = FontStyles.Italic,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                    }
+                );
+                return;
+            }
 
             // Iterate over all selected items
             foreach (var selectedItem in policyExplorer.myDataGrid.SelectedItems)
@@ -391,116 +410,256 @@ namespace Techolics_
                         p.Id == item.ID
                     );
 
+                    // Always show basic info
+                    AddDetailBlock("ID", item.ID);
+                    AddDetailBlock("Name", item.Name);
+                    AddDetailBlock("Profile", item.Profile);
+                    AddDetailBlock("Default Value", item.DefaultValue);
+                    AddDetailBlock("Current", item.Current);
+                    AddDetailBlock("Status", item.Status);
+
                     if (docPolicy != null && docPolicy.Documentation != null)
                     {
                         var doc = docPolicy.Documentation;
 
-                        // Use a StringBuilder for efficient string concatenation
-                        var sb = new System.Text.StringBuilder();
-
-                        sb.AppendLine($"ID: {item.ID}");
-                        sb.AppendLine($"Name: {item.Name}");
-                        sb.AppendLine($"Profile: {item.Profile}");
-                        sb.AppendLine($"Default Value: {item.DefaultValue}");
-                        sb.AppendLine($"Current: {item.Current}");
-                        sb.AppendLine($"Status: {item.Status}");
-                        sb.AppendLine();
-
                         if (doc.Title != null)
-                        {
-                            sb.AppendLine($"Title: {doc.Title.Text.Trim()}");
-                            sb.AppendLine();
-                        }
+                            AddDetailBlock("Title", doc.Title.Text.Trim());
 
                         if (doc.ProfileApplicability != null)
-                        {
-                            sb.AppendLine(
-                                $"Profile Applicability: {doc.ProfileApplicability.Text.Trim()}"
+                            AddDetailBlock(
+                                "Profile Applicability",
+                                doc.ProfileApplicability.Text.Trim()
                             );
-                            sb.AppendLine();
-                        }
 
                         if (doc.Description != null)
-                        {
-                            sb.AppendLine($"Description: {doc.Description.Text.Trim()}");
-                            sb.AppendLine();
-                        }
+                            AddDetailBlock("Description", doc.Description.Text.Trim());
 
                         if (doc.Rationale != null)
-                        {
-                            sb.AppendLine($"Rationale: {doc.Rationale.Text.Trim()}");
-                            sb.AppendLine();
-                        }
+                            AddDetailBlock("Rationale", doc.Rationale.Text.Trim());
 
                         if (doc.Impact != null)
-                        {
-                            sb.AppendLine($"Impact: {doc.Impact.Text.Trim()}");
-                            sb.AppendLine();
-                        }
+                            AddDetailBlock("Impact", doc.Impact.Text.Trim());
 
                         if (doc.Audit != null)
-                        {
-                            sb.AppendLine($"Audit: {doc.Audit.Text.Trim()}");
-                            sb.AppendLine();
-                        }
+                            AddDetailBlock("Audit", doc.Audit.Text.Trim());
 
                         if (doc.Remediation != null)
                         {
-                            sb.AppendLine($"Remediation: {doc.Remediation.Text.Trim()}");
-                            if (
-                                doc.Remediation.CodeBlock != null
-                                && doc.Remediation.CodeBlock.Lines != null
-                            )
+                            AddDetailBlock("Remediation", doc.Remediation.Text.Trim());
+
+                            if (doc.Remediation.CodeBlock?.Lines != null)
                             {
-                                sb.AppendLine("Code Block:");
-                                foreach (var line in doc.Remediation.CodeBlock.Lines)
-                                {
-                                    sb.AppendLine(line.Trim());
-                                }
+                                var codeLines = string.Join(
+                                    Environment.NewLine,
+                                    doc.Remediation.CodeBlock.Lines.Select(l => l.Trim())
+                                );
+                                AddDetailBlock(
+                                    "Remediation Code Block",
+                                    codeLines,
+                                    isCopiable: true
+                                );
                             }
-                            sb.AppendLine();
                         }
 
                         if (doc.DefaultValue != null)
-                        {
-                            sb.AppendLine(
-                                $"Default Value (Documentation): {doc.DefaultValue.Text.Trim()}"
+                            AddDetailBlock(
+                                "Default Value (Documentation)",
+                                doc.DefaultValue.Text.Trim()
                             );
-                            sb.AppendLine();
-                        }
 
-                        if (doc.References != null && doc.References.ReferenceList != null)
+                        if (doc.References?.ReferenceList != null)
                         {
-                            sb.AppendLine("References:");
+                            // References as a custom block with hyperlinks
+                            var referencesStackPanel = new StackPanel();
                             foreach (var reference in doc.References.ReferenceList)
                             {
-                                sb.AppendLine($"- {reference.Text.Trim()} ({reference.Url})");
-                            }
-                            sb.AppendLine();
-                        }
+                                var hyperlink = new Hyperlink
+                                {
+                                    NavigateUri = new Uri(reference.Url),
+                                };
+                                hyperlink.Inlines.Add(new Run(reference.Text.Trim()));
+                                hyperlink.RequestNavigate += (s, ev) =>
+                                {
+                                    System.Diagnostics.Process.Start(
+                                        new System.Diagnostics.ProcessStartInfo
+                                        {
+                                            FileName = ev.Uri.AbsoluteUri,
+                                            UseShellExecute = true,
+                                        }
+                                    );
+                                };
 
-                        policyExplorer.detailsTextBlock.Text += sb.ToString();
+                                referencesStackPanel.Children.Add(
+                                    new TextBlock(hyperlink)
+                                    {
+                                        Margin = new Thickness(0, 5, 0, 0),
+                                        FontSize = 12,
+                                    }
+                                );
+                            }
+
+                            AddCustomBlock("References", referencesStackPanel);
+                        }
                     }
                     else
                     {
-                        policyExplorer.detailsTextBlock.Text +=
-                            $"ID: {item.ID}\n"
-                            + $"Name: {item.Name}\n"
-                            + $"Profile: {item.Profile}\n"
-                            + $"Default Value: {item.DefaultValue}\n"
-                            + $"Current: {item.Current}\n"
-                            + $"Status: {item.Status}\n"
-                            + $"Description: Not available\n\n";
+                        // If no documentation is available
+                        AddDetailBlock("Description", "Not available");
                     }
                 }
             }
 
-            // Show a default message if nothing is selected
-            if (string.IsNullOrWhiteSpace(policyExplorer.detailsTextBlock.Text))
+            // If container is empty (no details), show default message
+            if (container.Children.Count == 0)
             {
-                policyExplorer.detailsTextBlock.Text = "Select rows to view details.";
+                container.Children.Add(
+                    new TextBlock
+                    {
+                        Text = "Select rows to view details.",
+                        FontFamily = new System.Windows.Media.FontFamily("Consolas"),
+                        FontSize = 14,
+                        FontStyle = FontStyles.Italic,
+                        HorizontalAlignment = HorizontalAlignment.Center,
+                    }
+                );
             }
         }
+
+        private void AddDetailBlock(string title, string content, bool isCopiable = false)
+        {
+            if (string.IsNullOrWhiteSpace(content))
+                return;
+            content = content.Trim();
+
+            // Create a Border for the detail block with subtle styling
+            var detailBlock = new Border
+            {
+                Margin = new Thickness(0, 0, 0, 0),
+                Padding = new Thickness(10),
+                CornerRadius = new CornerRadius(5),
+                BorderThickness = new Thickness(1),
+            };
+
+            var outerStack = new StackPanel();
+
+            // Top panel with title and optional copy button
+            var titlePanel = new DockPanel
+            {
+                LastChildFill = false
+            };
+
+            // Title text
+            var titleText = new TextBlock
+            {
+                Text = title,
+                FontWeight = FontWeights.Bold,
+                FontSize = 14,
+                Margin = new Thickness(0, 0, 0, 5)
+            };
+            DockPanel.SetDock(titleText, Dock.Left);
+            titlePanel.Children.Add(titleText);
+
+            // If copiable, add a Copy button on the right
+            if (isCopiable)
+            {
+                var copyButton = new Button
+                {
+                    Content = "Copy",
+                    Margin = new Thickness(5, 0, 0, 0),
+                    Padding = new Thickness(5, 0, 5, 0),
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    FontSize = 12
+                };
+
+                // On click, copy the content to clipboard
+                copyButton.Click += (s, e) =>
+                {
+                    Clipboard.SetText(content);
+                };
+
+                DockPanel.SetDock(copyButton, Dock.Right);
+                titlePanel.Children.Add(copyButton);
+            }
+
+            outerStack.Children.Add(titlePanel);
+
+            // Add content
+            if (isCopiable)
+            {
+                // For copiable content, use a ScrollViewer + TextBox
+                var scrollViewer = new ScrollViewer
+                {
+                    VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                    HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+                    Margin = new Thickness(0, 2, 0, 0)
+                };
+
+                var textBox = new TextBox
+                {
+                    Text = content,
+                    IsReadOnly = true,
+                    TextWrapping = TextWrapping.Wrap,
+                    Padding = new Thickness(5, 5, 5, 15),
+                };
+
+                scrollViewer.Content = textBox;
+                outerStack.Children.Add(scrollViewer);
+            }
+            else
+            {
+                // For non-copiable content, just a regular TextBlock
+                outerStack.Children.Add(
+                    new TextBlock
+                    {
+                        Text = content,
+                        TextWrapping = TextWrapping.Wrap,
+                        Margin = new Thickness(0, 5, 0, 0),
+                        FontFamily = new FontFamily("Consolas")
+                    }
+                );
+            }
+
+            detailBlock.Child = outerStack;
+            policyExplorer.DetailsContainer.Children.Add(detailBlock);
+        }
+
+        private void AddCustomBlock(string title, UIElement contentElement)
+        {
+            var detailBlock = new Border
+            {
+                Margin = new Thickness(0, 5, 0, 5),
+                Padding = new Thickness(10),
+                CornerRadius = new CornerRadius(5),
+                BorderThickness = new Thickness(1),
+            };
+
+            var stackPanel = new StackPanel();
+
+            var titlePanel = new DockPanel
+            {
+                LastChildFill = false
+            };
+
+            // Title
+            var titleText = new TextBlock
+            {
+                Text = title,
+                FontWeight = FontWeights.Bold,
+                FontSize = 14,
+                Margin = new Thickness(0, 0, 0, 5)
+            };
+            DockPanel.SetDock(titleText, Dock.Left);
+            titlePanel.Children.Add(titleText);
+
+            stackPanel.Children.Add(titlePanel);
+
+            stackPanel.Children.Add(contentElement);
+
+            detailBlock.Child = stackPanel;
+            policyExplorer.DetailsContainer.Children.Add(detailBlock);
+        }
+
 
         // Method to update the navigation path
         private void UpdateNavigationPath(TreeViewItem selectedItem)
@@ -569,7 +728,11 @@ namespace Techolics_
                 benchmarkValues,
                 benchmarkDocumentation
             );
-            configurator.ConfigurePolicies(selectedItems, isRevert: false, fromEditWindow: fromEditWindow);
+            configurator.ConfigurePolicies(
+                selectedItems,
+                isRevert: false,
+                fromEditWindow: fromEditWindow
+            );
         }
 
         /// <summary>
