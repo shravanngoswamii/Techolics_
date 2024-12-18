@@ -1,0 +1,38 @@
+name: Create release with standalone exe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build_and_release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build and Publish EXE
+        run: dotnet publish -c Release -r win-x64 --self-contained true /p:TargetFramework=net8.0-windows /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishReadyToRun=false /p:PublishProtocol=FileSystem /p:PublishDir="./publish_output/" /p:IncludeAllContentForSelfExtract=true /p:EnableCompressionInSingleFile=true
+
+      - name: Get commit short hash
+        id: vars
+        run: echo "tag_name=exe_$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.vars.outputs.tag_name }}
+          files: ./publish_output/*.exe
+          body: |
+            This release contains the standalone EXE build of the application.
+            Download and run on Windows as needed.
