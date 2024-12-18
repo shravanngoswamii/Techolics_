@@ -51,7 +51,7 @@ Following functionalities have been envisaged for the expected solution:
 ## Publishing
 
 ```bash
-dotnet publish -c Release -r win-x64 --self-contained true /p:TargetFramework=net8.0-windows /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishReadyToRun=false /p:PublishProtocol=FileSystem /p:PublishDir="%USERPROFILE%/Desktop/TestPublish/" /p:IncludeAllContentForSelfExtract=true /p:EnableCompressionInSingleFile=trues
+dotnet publish -c Release -r win-x64 --self-contained true /p:TargetFramework=net8.0-windows /p:PublishSingleFile=true /p:PublishTrimmed=false /p:PublishReadyToRun=false /p:PublishProtocol=FileSystem /p:PublishDir="%USERPROFILE%/Desktop/TestPublish/" /p:IncludeAllContentForSelfExtract=true /p:EnableCompressionInSingleFile=true
 ```
 
 App will be published to the specified directory (Desktop/Techolic_Published).
