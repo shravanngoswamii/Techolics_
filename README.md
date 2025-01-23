@@ -45,8 +45,10 @@ Following functionalities have been envisaged for the expected solution:
 
 ## Local Setup
 
-1. Ensure .NET 8.0 SDK installed.
-2. Run `dotnet restore` and `dotnet build`.
+
+1. Visual Studio 2022 & any Windows 11 edition (Home, Pro, Education, Enterprise, etc...)
+2. Ensure .NET 8.0 SDK installed.
+3. Run `dotnet restore` and `dotnet build`.
 
 ## Publishing through CMD (Command Prompt)
 
